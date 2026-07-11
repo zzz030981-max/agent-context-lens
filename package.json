@@ -15,7 +15,8 @@
     "dev": "npm run dev -w @agent-context-lens/web",
     "inspect:fixture": "npm run build && node apps/cli/dist/index.js inspect fixtures/conflicting-rules --file src/auth/login.ts --agent all --json",
     "clean": "find . -type d -name dist -prune -exec rm -rf {} +",
-    "test:pack": "npm run build && node scripts/smoke-pack.mjs"
+    "test:pack": "npm run build && node scripts/smoke-pack.mjs",
+    "release:dry-run": "node scripts/build-release-assets.mjs"
   },
   "engines": {
     "node": ">=20"

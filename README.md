@@ -65,6 +65,17 @@ node apps/cli/dist/index.js inspect . \
   --output .contextlens/report.json
 ```
 
+Copilot code review must be given a separately prepared PR base checkout. The scan never checks out or reads Git history itself:
+
+```bash
+contextlens inspect ./feature-worktree \
+  --file src/index.ts \
+  --cwd . \
+  --agent copilot \
+  --copilot-surface code-review \
+  --copilot-base-root ../main-worktree
+```
+
 ## What the report explains
 
 - Which instruction files were detected
@@ -136,6 +147,7 @@ See [SECURITY.md](SECURITY.md).
 - User-level and organization-managed instructions are excluded unless they are part of the scanned repository.
 - Cursor agent-selected rules are nondeterministic and therefore displayed separately.
 - Copilot feature support differs between IDE, chat, code review, and cloud-agent surfaces.
+- Code-review reports require a caller-provided PR base checkout; generic IDE chat is not modeled.
 
 ## Contributing
 

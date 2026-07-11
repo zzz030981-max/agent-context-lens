@@ -9,7 +9,9 @@ All notable changes follow Keep a Changelog and Semantic Versioning.
 - Separate the inspected target file from the agent working directory (`--cwd`).
 - Model Codex project guidance from repository root through cwd, with the documented default 32 KiB budget.
 - Distinguish Claude startup context, lazy nested context, and path-scoped rules; expose import limits and unresolved imports.
-- Add Copilot cloud-agent, code-review, and IDE-chat surface selection plus `excludeAgent` support.
+- Add Copilot cloud-agent and code-review surface selection plus `excludeAgent` support.
+- Require a supplied base-branch checkout for Copilot code-review analysis.
+- Reject realpath-based repository escapes and add release asset dry-run coverage.
 - Upgrade JSON reports to schema 1.1 with working-directory and Copilot-surface metadata.
 
 ### Added
