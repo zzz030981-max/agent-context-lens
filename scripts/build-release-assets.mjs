@@ -24,7 +24,9 @@ await writeFile(path.join(output, sbom), run(npm, ["sbom", "--workspace", "agent
 await writeFile(path.join(output, notes), `# Agent Context Lens v${pkg.version}\n\n## Highlights\n\n- Hardened working-directory, Copilot code-review base-root, and symbolic-link containment behavior.\n- Added package, installed CLI, loopback server, release-asset, and cross-platform CI gates.\n- Report schema remains v1.1; package version is independent.\n\n## Upgrade notes\n\nSee https://github.com/zzz030981-max/agent-context-lens/blob/main/docs/MIGRATION-0.2.md. Cursor semantic selection remains inferred/manual.\n`);
 JSON.parse(await readFile(path.join(output, sbom), "utf8"));
 if (!(await readFile(path.join(output, notes), "utf8")).trim()) throw new Error("Release notes must not be empty.");
-for (const file of [sourceArchive, tarball]) run("tar", ["-tf", path.join(output, file)], { stdio: "ignore" });
+if (process.platform === "win32") run("tar", ["-tf", path.join(output, sourceArchive)], { stdio: "ignore" });
+else run("unzip", ["-t", path.join(output, sourceArchive)], { stdio: "ignore" });
+run("tar", ["-tf", path.join(output, tarball)], { stdio: "ignore" });
 const assets = (await readdir(output)).filter(file => file !== "SHA256SUMS").sort();
 for (const file of [sourceArchive, tarball, sbom, notes]) if (!assets.includes(file)) throw new Error(`Missing release asset: ${file}`);
 const sums = await Promise.all(assets.map(async file => `${createHash("sha256").update(await readFile(path.join(output, file))).digest("hex")}  ${file}`));
