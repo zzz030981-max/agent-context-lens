@@ -3,7 +3,7 @@ import fg from "fast-glob";
 import matter from "gray-matter";
 import { minimatch } from "minimatch";
 import type { AgentAdapter, AdapterContext, AdapterResult, InstructionMetadata } from "../types.js";
-import { ancestorDirectories, exists, isWithin, readRepositoryText, resolveSafeRepositoryPath, toPosix } from "../utils.js";
+import { ancestorDirectories, exists, findEscapingSymbolicLinks, isWithin, readRepositoryText, resolveSafeRepositoryPath, toPosix } from "../utils.js";
 import { makeSource } from "./common.js";
 
 interface ImportExpansion {
@@ -88,6 +88,7 @@ export const claudeAdapter: AgentAdapter = {
     }
 
     const ruleFiles = await fg(".claude/rules/**/*.md", { cwd: context.root, absolute: true, dot: true, followSymbolicLinks: false });
+    blockedPaths.push(...await findEscapingSymbolicLinks(context.root, path.join(context.root, ".claude", "rules")));
     for (const file of ruleFiles.sort()) {
       let raw: string;
       try { raw = await readRepositoryText(context.root, file); } catch { blockedPaths.push(file); continue; }

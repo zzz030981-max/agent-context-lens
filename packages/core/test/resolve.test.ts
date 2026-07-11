@@ -229,7 +229,7 @@ describe("resolveRepository", () => {
     expect(sources.some(source => source.content.includes("Base instructions"))).toBe(true);
     expect(sources.some(source => source.content.includes("Feature instructions"))).toBe(false);
     expect(sources.some(source => source.content.includes("Base path rule"))).toBe(true);
-    expect(report.options.copilotBaseRoot).toBe(base);
+    expect(report.options.copilotBaseRoot).toBe(await fs.realpath(base));
   });
 
   it("rejects a working-directory symlink that escapes the repository", async () => {

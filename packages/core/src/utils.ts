@@ -44,6 +44,26 @@ export async function readRepositoryText(realRoot: string, file: string): Promis
   return readText(file);
 }
 
+export async function findEscapingSymbolicLinks(realRoot: string, directory: string): Promise<string[]> {
+  const blocked: string[] = [];
+  async function walk(current: string): Promise<void> {
+    let entries: import("node:fs").Dirent[];
+    try { entries = await fs.readdir(current, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      const file = path.join(current, entry.name);
+      if (entry.isSymbolicLink()) {
+        try {
+          if (!isWithin(realRoot, await fs.realpath(file))) blocked.push(file);
+        } catch { blocked.push(file); }
+      } else if (entry.isDirectory()) {
+        await walk(file);
+      }
+    }
+  }
+  await walk(directory);
+  return blocked;
+}
+
 export function relativeTo(root: string, file: string): string {
   const rel = toPosix(path.relative(root, file));
   return rel || ".";
