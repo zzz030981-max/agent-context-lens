@@ -1,6 +1,6 @@
 {
   "name": "agent-context-lens-monorepo",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Explain which repository instructions AI coding agents receive for any file.",
   "license": "MIT",
@@ -15,13 +15,16 @@
     "dev": "npm run dev -w @agent-context-lens/web",
     "inspect:fixture": "npm run build && node apps/cli/dist/index.js inspect fixtures/conflicting-rules --file src/auth/login.ts --agent all --json",
     "clean": "find . -type d -name dist -prune -exec rm -rf {} +",
+    "versions:check": "node scripts/check-versions.mjs",
+    "package:inspect": "node scripts/inspect-package.mjs",
     "test:pack": "npm run build && node scripts/smoke-pack.mjs",
+    "test:server-pack": "npm run build && node scripts/smoke-installed-server.mjs",
     "release:dry-run": "node scripts/build-release-assets.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.27.7"
   }
 }

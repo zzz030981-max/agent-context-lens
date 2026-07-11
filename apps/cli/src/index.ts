@@ -9,8 +9,10 @@ import pc from "picocolors";
 import { Command } from "commander";
 import { resolveRepository, supportedAgents, type AgentId, type CopilotSurface, type RepositoryReport } from "@agent-context-lens/core";
 
+const packageJson = JSON.parse(await fs.readFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "package.json"), "utf8")) as { version: string };
 const program = new Command();
-program.name("contextlens").description("Explain which repository instructions AI coding agents receive.").version("0.1.1");
+program.name("contextlens").description("Explain which repository instructions AI coding agents receive.").version(packageJson.version);
+program.addHelpText("after", "\nInspect options: --cwd <path>, --copilot-surface <surface>, --copilot-base-root <path>\n");
 
 function parseAgents(value: string): AgentId[] {
   if (value === "all") return supportedAgents;
