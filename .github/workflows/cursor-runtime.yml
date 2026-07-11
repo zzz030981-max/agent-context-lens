@@ -1,6 +1,6 @@
 name: Cursor runtime verification
 
-on:
+"on":
   workflow_dispatch:
 
 permissions:
