@@ -29,4 +29,11 @@ describe("Cursor runtime evidence", () => {
     const { runtimeArgs } = await import("../../../scripts/verify-cursor-runtime.mjs");
     expect(runtimeArgs).toContain("--trust");
   });
+
+  it("uses the runner temporary path only inside workflow shell steps", async () => {
+    const file = path.resolve(process.cwd(), "../../.github/workflows/cursor-runtime.yml");
+    const workflow = await fs.readFile(file, "utf8");
+    expect(workflow).not.toContain("${{ runner.temp }}");
+    expect(workflow).toContain("$RUNNER_TEMP/cursor-agent/cursor-agent");
+  });
 });
