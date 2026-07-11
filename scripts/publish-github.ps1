@@ -69,8 +69,14 @@ foreach ($Command in @("typecheck", "test", "build", "test:pack")) {
 if ($LASTEXITCODE -ne 0) { throw "npm audit found high or critical vulnerabilities." }
 
 Write-Step "Create or connect GitHub repository"
-& gh repo view $RepoFullName --json nameWithOwner 2>$null | Out-Null
-if ($LASTEXITCODE -ne 0) {
+$RepositoryExists = $true
+try {
+  & gh repo view $RepoFullName --json nameWithOwner *> $null
+  $RepositoryExists = $LASTEXITCODE -eq 0
+} catch {
+  $RepositoryExists = $false
+}
+if (-not $RepositoryExists) {
   & gh repo create $RepoFullName --public --source . --remote origin --push --description "DevTools for AI coding instructions: trace the effective context received by Codex, Claude Code, Cursor, and GitHub Copilot."
   if ($LASTEXITCODE -ne 0) { throw "Repository creation failed." }
 } else {
