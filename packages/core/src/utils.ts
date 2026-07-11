@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 
-export const toPosix = (value: string): string => value.split(path.sep).join("/");
+export const toPosix = (value: string): string => value.replace(/\\/g, "/").split(path.sep).join("/");
 
 export async function exists(file: string): Promise<boolean> {
   try { await fs.access(file); return true; } catch { return false; }
@@ -40,7 +40,7 @@ export function ancestorDirectories(root: string, targetDir: string): string[] {
   const normalizedRoot = path.resolve(root);
   let current = path.resolve(targetDir);
   const dirs: string[] = [];
-  while (current.startsWith(normalizedRoot)) {
+  while (isWithin(normalizedRoot, current)) {
     dirs.push(current);
     if (current === normalizedRoot) break;
     const parent = path.dirname(current);
@@ -48,6 +48,15 @@ export function ancestorDirectories(root: string, targetDir: string): string[] {
     current = parent;
   }
   return dirs.reverse();
+}
+
+export function isWithin(root: string, candidate: string): boolean {
+  const relative = path.relative(path.resolve(root), path.resolve(candidate));
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+export function resolveRepositoryPath(root: string, value: string): string {
+  return path.resolve(root, value.replace(/[\\/]+/g, path.sep));
 }
 
 export function stripFrontmatter(content: string): string {

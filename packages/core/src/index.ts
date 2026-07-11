@@ -5,7 +5,7 @@ import { codexAdapter } from "./adapters/codex.js";
 import { claudeAdapter } from "./adapters/claude.js";
 import { cursorAdapter } from "./adapters/cursor.js";
 import { copilotAdapter } from "./adapters/copilot.js";
-import { estimateTokens, toPosix } from "./utils.js";
+import { estimateTokens, isWithin, resolveRepositoryPath, toPosix } from "./utils.js";
 import { findConflicts } from "./analyzers/conflicts.js";
 import { findDuplicates } from "./analyzers/duplicates.js";
 import { findBrokenReferences } from "./analyzers/references.js";
@@ -27,15 +27,20 @@ export async function resolveRepository(options: ResolveOptions): Promise<Reposi
   const root = path.resolve(options.repositoryRoot);
   const stat = await fs.stat(root);
   if (!stat.isDirectory()) throw new Error(`Repository root is not a directory: ${root}`);
-  const targetAbsolute = path.resolve(root, options.targetFile);
-  const targetFromRoot = path.relative(root, targetAbsolute);
-  if (targetFromRoot.startsWith("..") || path.isAbsolute(targetFromRoot)) throw new Error("Target file must be inside the repository root.");
+  const targetAbsolute = resolveRepositoryPath(root, options.targetFile);
+  if (!isWithin(root, targetAbsolute)) throw new Error("Target file must be inside the repository root.");
   const targetRelative = toPosix(path.relative(root, targetAbsolute));
+  const workingDirectoryAbsolute = resolveRepositoryPath(root, options.workingDirectory ?? ".");
+  if (!isWithin(root, workingDirectoryAbsolute)) throw new Error("Working directory must be inside the repository root.");
+  const workingStat = await fs.stat(workingDirectoryAbsolute).catch(() => undefined);
+  if (!workingStat?.isDirectory()) throw new Error(`Working directory is not a directory: ${options.workingDirectory ?? "."}`);
+  const workingDirectoryRelative = toPosix(path.relative(root, workingDirectoryAbsolute)) || ".";
   const agents = options.agents?.length ? options.agents : supportedAgents;
+  const copilotSurface = options.copilotSurface ?? "cloud-agent";
   const traces: AgentTrace[] = [];
 
   for (const agent of agents) {
-    const result = await adapters[agent].resolve({ root, targetAbsolute, targetRelative });
+    const result = await adapters[agent].resolve({ root, targetAbsolute, targetRelative, workingDirectoryAbsolute, workingDirectoryRelative, copilotSurface });
     const includedSources = result.sources.filter(source => source.matched && source.loadMode !== "manual");
     const findings = [
       ...findConflicts(includedSources),
@@ -62,10 +67,12 @@ export async function resolveRepository(options: ResolveOptions): Promise<Reposi
   const included = traces.flatMap(trace => trace.includedSources);
   const allFindings = traces.flatMap(trace => trace.findings);
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     generatedAt: new Date().toISOString(),
     repositoryRoot: root,
     targetFile: targetRelative,
+    workingDirectory: workingDirectoryRelative,
+    options: { agents, copilotSurface },
     traces,
     summary: {
       detectedFiles: new Set(allSources.map(source => source.source.file)).size,

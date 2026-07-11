@@ -1,5 +1,7 @@
 # Adapter evidence model
 
+Last reviewed: **2026-07-11**. A `documented` label requires a first-party source. A `verified` label requires a pinned client-version reproduction. Repository-local scans deliberately exclude user and organization policy that is not present in the selected repository.
+
 Agent Context Lens distinguishes four evidence levels:
 
 - **verified** — reproduced against a pinned client version.
@@ -9,43 +11,38 @@ Agent Context Lens distinguishes four evidence levels:
 
 ## Codex
 
-Modeled behavior:
+Modeled from OpenAI's agent-loop documentation:
 
-- One instruction file per directory.
-- Selection order: `AGENTS.override.md`, then `AGENTS.md`.
-- Root-to-working-directory concatenation.
-- Later, more specific instructions have higher effective precedence.
+- Select one file per directory: `AGENTS.override.md`, then `AGENTS.md`.
+- Concatenate repository guidance from the project root through the independent agent working directory (`--cwd`), not through the target-file directory.
+- Apply the documented default 32 KiB project-document budget and report original bytes, loaded bytes, and truncation.
 
-Repository-local scans intentionally exclude `~/.codex` and custom fallback names.
+Custom fallback filenames, user-level `$CODEX_HOME` instructions, and custom byte-budget configuration remain outside this repository-only scan.
 
 ## Claude Code
 
-Modeled behavior:
+Modeled from Anthropic's memory documentation:
 
-- `CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` in the ancestor chain.
-- Root-to-working-directory concatenation.
-- Subdirectory instructions are treated as lazy sources for files under that subtree.
-- `.claude/rules/**/*.md` and `paths` frontmatter.
-- `@path` imports up to four hops.
+- `CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` from the project root through cwd are startup context.
+- Nested instructions below cwd are shown as lazy only when the target reaches their subtree.
+- `.claude/rules/**/*.md` can be path-scoped with `paths` frontmatter.
+- `@imports` are expanded to four hops, skip fenced-code references, stop cycles, and record missing or repository-external references explicitly.
 
-Managed and user-level policy files are excluded.
+Managed organization policy and user-level `~/.claude/CLAUDE.md` are excluded.
 
 ## Cursor
 
-Modeled behavior:
+`.cursor/rules/**/*.mdc`, `alwaysApply`, `globs`, and legacy `.cursorrules` are parsed from Cursor's public rule format. `alwaysApply` and explicit globs are reported as static triggers; agent-requested and manual rules remain non-deterministic.
 
-- `.cursor/rules/**/*.mdc`.
-- `alwaysApply` and `globs` frontmatter.
-- Legacy `.cursorrules`.
-
-Rules selected semantically by an agent are nondeterministic and displayed as manual rather than included. This adapter remains `inferred` until pinned runtime verification is added.
+**Cursor semantic selection is nondeterministic and cannot be fully reproduced by static analysis.** It remains `inferred` or `manual` until a pinned Cursor runtime fixture is available.
 
 ## GitHub Copilot
 
-Modeled behavior:
+Modeled from GitHub's custom-instructions documentation:
 
-- `.github/copilot-instructions.md` repository-wide instructions.
-- `.github/instructions/**/*.instructions.md` with `applyTo` frontmatter.
-- Nearest `AGENTS.md` for agent instructions.
+- `.github/copilot-instructions.md` is repository-wide.
+- `.github/instructions/**/*.instructions.md` uses `applyTo` and can exclude `cloud-agent` or `code-review` with `excludeAgent`.
+- `cloud-agent`, `code-review`, and conservative `ide-chat` surface selection are distinct.
+- Nearest `AGENTS.md` is documented for cloud-agent. Detected `CLAUDE.md` and `GEMINI.md` candidates remain `inferred` when deterministic selection order is undocumented.
 
-Support differs by Copilot surface; the report displays this caveat.
+Evidence sources: OpenAI agent-loop documentation, Anthropic Claude Code memory documentation, Cursor Rules documentation, and GitHub's repository custom-instructions and support-matrix pages. See `docs/SOURCES.md` for links.

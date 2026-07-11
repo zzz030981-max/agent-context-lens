@@ -31,3 +31,16 @@ The documentation application is dynamically rendered and was not machine-verifi
   https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions
 
 Key modeled claims: `.github/copilot-instructions.md`, `.github/instructions/NAME.instructions.md`, `applyTo` matching, combined repository/path instructions, and nearest `AGENTS.md` precedence for agent instructions.
+
+## v0.1.1 evidence refresh
+
+- OpenAI, “Unrolling the Codex agent loop”
+  https://openai.com/index/unrolling-the-codex-agent-loop/
+- Anthropic, “Manage Claude's memory”
+  https://docs.anthropic.com/en/docs/claude-code/memory
+- Cursor, “Rules”
+  https://docs.cursor.com/context/rules
+- GitHub, “Adding repository custom instructions for GitHub Copilot in your IDE”
+  https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide
+- GitHub, “Support for different types of custom instructions”
+  https://docs.github.com/en/copilot/reference/custom-instructions-support

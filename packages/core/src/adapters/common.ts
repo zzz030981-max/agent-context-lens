@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { AgentId, Confidence, InstructionSource, LoadMode } from "../types.js";
+import type { AgentId, Confidence, InstructionMetadata, InstructionSource, LoadMode } from "../types.js";
 import { normalizeInstruction, relativeTo, stableId } from "../utils.js";
 
 export function makeSource(input: {
@@ -13,7 +13,7 @@ export function makeSource(input: {
   matched: boolean;
   matchReason: string;
   scopeDescription: string;
-  metadata?: Record<string, unknown>;
+  metadata?: InstructionMetadata;
 }): InstructionSource {
   const rel = relativeTo(input.root, path.resolve(input.file));
   return {

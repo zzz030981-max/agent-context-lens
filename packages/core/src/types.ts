@@ -1,4 +1,5 @@
 export type AgentId = "codex" | "claude" | "cursor" | "copilot";
+export type CopilotSurface = "cloud-agent" | "code-review" | "ide-chat";
 export type Confidence = "verified" | "documented" | "inferred" | "unknown";
 export type LoadMode = "startup" | "path-match" | "lazy" | "manual";
 
@@ -19,7 +20,20 @@ export interface InstructionSource {
   confidence: Confidence;
   matched: boolean;
   matchReason: string;
-  metadata?: Record<string, unknown>;
+  metadata?: InstructionMetadata;
+}
+
+export interface InstructionMetadata {
+  selectionOrder?: string[];
+  originalBytes?: number;
+  loadedBytes?: number;
+  truncated?: boolean;
+  excludedBy?: string[];
+  imports?: string[];
+  brokenReferences?: string[];
+  externalImports?: string[];
+  depthLimited?: boolean;
+  [key: string]: unknown;
 }
 
 export type FindingSeverity = "info" | "warning" | "error";
@@ -49,10 +63,15 @@ export interface AgentTrace {
 }
 
 export interface RepositoryReport {
-  schemaVersion: "1.0";
+  schemaVersion: "1.1";
   generatedAt: string;
   repositoryRoot: string;
   targetFile: string;
+  workingDirectory: string;
+  options: {
+    agents: AgentId[];
+    copilotSurface?: CopilotSurface;
+  };
   traces: AgentTrace[];
   summary: {
     detectedFiles: number;
@@ -66,13 +85,18 @@ export interface RepositoryReport {
 export interface ResolveOptions {
   repositoryRoot: string;
   targetFile: string;
+  workingDirectory?: string;
   agents?: AgentId[];
+  copilotSurface?: CopilotSurface;
 }
 
 export interface AdapterContext {
   root: string;
   targetAbsolute: string;
   targetRelative: string;
+  workingDirectoryAbsolute: string;
+  workingDirectoryRelative: string;
+  copilotSurface?: CopilotSurface;
 }
 
 export interface AdapterResult {
