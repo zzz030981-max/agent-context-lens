@@ -22,12 +22,27 @@ A modern repository may contain `AGENTS.md`, `CLAUDE.md`, `.claude/rules`, `.cur
 
 Agent Context Lens is the equivalent of a CSS cascade inspector for AI coding instructions.
 
-## Quick start
+## Install and run
+
+Until the package is published to npm, install a release tarball locally:
+
+```bash
+npm install -g ./agent-context-lens-0.1.1.tgz
+contextlens inspect . --file src/index.ts --cwd . --agent all
+```
+
+After npm publication, the equivalent command will be:
+
+```bash
+npx agent-context-lens inspect . --file src/index.ts --cwd . --agent all
+```
+
+## Development
 
 ```bash
 npm install
 npm run build
-node apps/cli/dist/index.js serve . --file src/index.ts
+node apps/cli/dist/index.js serve . --file src/index.ts --cwd .
 ```
 
 Open the printed local URL. Nothing is uploaded.
@@ -35,7 +50,7 @@ Open the printed local URL. Nothing is uploaded.
 CLI-only trace:
 
 ```bash
-node apps/cli/dist/index.js inspect . --file src/index.ts --agent all
+node apps/cli/dist/index.js inspect . --file src/index.ts --cwd . --agent all
 ```
 
 JSON for automation:
@@ -43,6 +58,8 @@ JSON for automation:
 ```bash
 node apps/cli/dist/index.js inspect . \
   --file src/index.ts \
+  --cwd . \
+  --copilot-surface cloud-agent \
   --agent codex,claude \
   --json \
   --output .contextlens/report.json
@@ -92,20 +109,12 @@ packages/core  adapters, resolver, analyzers, report schema
 fixtures       reproducible test repositories
 ```
 
-## Development
-
-```bash
-npm install
-npm run typecheck
-npm test
-npm run build
-```
-
 Run the intentional-conflict demo:
 
 ```bash
 node apps/cli/dist/index.js serve fixtures/conflicting-rules \
   --file src/auth/login.ts \
+  --cwd . \
   --no-open
 ```
 

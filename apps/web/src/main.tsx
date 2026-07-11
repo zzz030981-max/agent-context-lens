@@ -45,6 +45,9 @@ function App() {
   const params = new URLSearchParams(location.search);
   const [file, setFile] = useState(params.get("file") ?? "README.md");
   const [draftFile, setDraftFile] = useState(file);
+  const [cwd, setCwd] = useState(params.get("cwd") ?? ".");
+  const [draftCwd, setDraftCwd] = useState(cwd);
+  const [copilotSurface, setCopilotSurface] = useState(params.get("copilotSurface") ?? "cloud-agent");
   const [report, setReport] = useState<RepositoryReport | null>(null);
   const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -54,13 +57,19 @@ function App() {
   useEffect(() => { fetch("/api/files").then(r => r.json()).then(setFiles).catch(() => setFiles([])); }, []);
   useEffect(() => {
     setLoading(true); setError(null);
-    fetch(`/api/report?file=${encodeURIComponent(file)}&agent=all`)
+    fetch(`/api/report?file=${encodeURIComponent(file)}&cwd=${encodeURIComponent(cwd)}&copilotSurface=${encodeURIComponent(copilotSurface)}&agent=all`)
       .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error ?? "Unable to generate report"); return data; })
       .then(setReport).catch(e => setError(e.message)).finally(() => setLoading(false));
-  }, [file]);
+  }, [file, cwd, copilotSurface]);
 
   const traces = useMemo(() => report?.traces.filter(t => selected === "all" || t.agent === selected) ?? [], [report, selected]);
-  const applyFile = () => { const next = draftFile.trim(); if (next) { setFile(next); history.replaceState({}, "", `?file=${encodeURIComponent(next)}`); } };
+  const applyFile = () => {
+    const nextFile = draftFile.trim();
+    const nextCwd = draftCwd.trim();
+    if (!nextFile || !nextCwd) return;
+    setFile(nextFile); setCwd(nextCwd);
+    history.replaceState({}, "", `?file=${encodeURIComponent(nextFile)}&cwd=${encodeURIComponent(nextCwd)}&copilotSurface=${encodeURIComponent(copilotSurface)}`);
+  };
 
   return <main>
     <div className="ambient one"/><div className="ambient two"/>
@@ -69,7 +78,13 @@ function App() {
       <p className="eyebrow">DevTools for AI coding instructions</p>
       <h1>See the context<br/><em>your agent actually receives.</em></h1>
       <p className="lede">Trace rule inheritance, path matching, conflicts, token cost, broken references, and risky commands across Codex, Claude Code, Cursor, and GitHub Copilot.</p>
-      <div className="file-picker"><input list="repo-files" value={draftFile} onChange={e => setDraftFile(e.target.value)} onKeyDown={e => e.key === "Enter" && applyFile()} aria-label="Target file"/><datalist id="repo-files">{files.map(item => <option value={item} key={item}/>)}</datalist><button onClick={applyFile}>Inspect file</button></div>
+      <div className="file-picker">
+        <label><span>Target file</span><input list="repo-files" value={draftFile} onChange={e => setDraftFile(e.target.value)} onKeyDown={e => e.key === "Enter" && applyFile()} aria-label="Target file"/></label>
+        <label><span>Agent working directory</span><input value={draftCwd} onChange={e => setDraftCwd(e.target.value)} onKeyDown={e => e.key === "Enter" && applyFile()} aria-label="Agent working directory"/></label>
+        <label><span>Copilot surface</span><select value={copilotSurface} onChange={e => setCopilotSurface(e.target.value)} aria-label="Copilot surface"><option value="cloud-agent">Cloud agent</option><option value="code-review">Code review</option><option value="ide-chat">IDE chat</option></select></label>
+        <datalist id="repo-files">{files.map(item => <option value={item} key={item}/>)}</datalist><button onClick={applyFile}>Inspect file</button>
+      </div>
+      <p className="selection">Target: <code>{file}</code> · Agent cwd: <code>{cwd}</code> · Copilot: <code>{copilotSurface}</code></p>
       <p className="privacy">Runs locally. No repository content is uploaded.</p>
     </header>
 
