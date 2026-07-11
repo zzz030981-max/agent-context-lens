@@ -11,29 +11,14 @@ const run = (command, args, options = {}) => process.platform === "win32"
   : execFileSync(command, args, options);
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const pause = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
-const start = (command, args, options) => process.platform === "win32"
-  ? spawn(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", command, ...args], options)
-  : spawn(command, args, options);
-async function stop(child) {
-  if (!child || child.exitCode !== null) return;
-  child.kill();
-  await Promise.race([
-    new Promise(resolve => child.once("close", resolve)),
-    pause(3000)
-  ]);
-  if (child.exitCode === null && process.platform === "win32") {
-    try { run("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore" }); } catch {}
-    await new Promise(resolve => child.once("close", resolve));
-  }
-}
 async function remove(directory) {
   let failure;
-  for (let attempt = 0; attempt < 10; attempt += 1) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
     try { await fs.rm(directory, { recursive: true, force: true }); return; }
     catch (error) {
       failure = error;
       if (error.code !== "EBUSY" && error.code !== "EPERM") throw error;
-      await pause(200);
+      await pause(500);
     }
   }
   throw failure;
@@ -43,12 +28,15 @@ const tarball = path.join(root, pack.filename);
 const temp = await fs.mkdtemp(path.join(os.tmpdir(), "contextlens-server-"));
 const port = await new Promise(resolve => { const server = net.createServer(); server.listen(0, "127.0.0.1", () => { const value = server.address().port; server.close(() => resolve(value)); }); });
 const bin = path.join(temp, "node_modules", ".bin", process.platform === "win32" ? "contextlens.cmd" : "contextlens");
+const entry = path.join(temp, "node_modules", "agent-context-lens", "dist", "index.js");
 let child;
 try {
   await fs.writeFile(path.join(temp, "package.json"), JSON.stringify({ name: "contextlens-server-smoke", private: true }));
   run(npm, ["install", tarball, "--no-fund", "--no-audit"], { cwd: temp, stdio: "inherit" });
   const fixture = path.join(root, "fixtures", "conflicting-rules");
-  child = start(bin, ["serve", fixture, "--file", "README.md", "--cwd", ".", "--port", String(port), "--no-open"], { cwd: temp, stdio: ["ignore", "pipe", "pipe"] });
+  child = process.platform === "win32"
+    ? spawn(process.execPath, [entry, "serve", fixture, "--file", "README.md", "--cwd", ".", "--port", String(port), "--no-open"], { cwd: temp, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
+    : spawn(bin, ["serve", fixture, "--file", "README.md", "--cwd", ".", "--port", String(port), "--no-open"], { cwd: temp, stdio: ["ignore", "pipe", "pipe"] });
   const base = `http://127.0.0.1:${port}`;
   const deadline = Date.now() + 10000;
   while (true) {
@@ -62,7 +50,8 @@ try {
   const body = await report.json(); if (body.schemaVersion !== "1.1" || body.workingDirectory !== ".") throw new Error("Installed server report API is invalid.");
   if (outside.status !== 400) throw new Error("Installed server accepted an outside cwd.");
 } finally {
-  await stop(child);
+  child?.kill();
+  if (child && child.exitCode === null) await Promise.race([new Promise(resolve => child.once("close", resolve)), pause(3000)]);
   await remove(temp);
   await fs.rm(tarball, { force: true });
 }
