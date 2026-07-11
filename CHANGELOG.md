@@ -2,7 +2,7 @@
 
 All notable changes follow Keep a Changelog and Semantic Versioning.
 
-## [0.1.1] - 2026-07-11
+## [0.2.0] - 2026-07-11
 
 ### Changed
 
@@ -16,7 +16,7 @@ All notable changes follow Keep a Changelog and Semantic Versioning.
 
 ### Added
 
-- Windows-safe package smoke coverage, adapter regression tests, and a manual v0.1.1 release workflow.
+- Windows-safe package smoke coverage, adapter regression tests, and a manual v0.2.0 release workflow.
 
 ## [0.1.0] - 2026-07-11
 

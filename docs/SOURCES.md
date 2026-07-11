@@ -32,7 +32,7 @@ The documentation application is dynamically rendered and was not machine-verifi
 
 Key modeled claims: `.github/copilot-instructions.md`, `.github/instructions/NAME.instructions.md`, `applyTo` matching, combined repository/path instructions, and nearest `AGENTS.md` precedence for agent instructions.
 
-## v0.1.1 evidence refresh
+## v0.2.0 evidence refresh
 
 - OpenAI, “Unrolling the Codex agent loop”
   https://openai.com/index/unrolling-the-codex-agent-loop/

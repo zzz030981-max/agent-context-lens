@@ -24,17 +24,9 @@ Agent Context Lens is the equivalent of a CSS cascade inspector for AI coding in
 
 ## Install and run
 
-Until the package is published to npm, install a release tarball locally:
-
 ```bash
-npm install -g ./agent-context-lens-0.1.1.tgz
-contextlens inspect . --file src/index.ts --cwd . --agent all
-```
-
-After npm publication, the equivalent command will be:
-
-```bash
-npx agent-context-lens inspect . --file src/index.ts --cwd . --agent all
+npx -y agent-context-lens@0.2.0 inspect . --file src/index.ts --cwd . --agent all
+npm install --global agent-context-lens@0.2.0
 ```
 
 ## Development

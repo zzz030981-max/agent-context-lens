@@ -1,5 +1,14 @@
 # Agent Context Lens
 
+## 0.2.0 Quick Start
+
+```bash
+npx -y agent-context-lens@0.2.0 inspect . --file src/index.ts --cwd . --agent all
+npm install --global agent-context-lens@0.2.0
+```
+
+`--file` is the inspected target and `--cwd` is the agent startup directory. Copilot code review requires `--copilot-base-root ../main-worktree`. The tool is read-only, uses no API key or telemetry, and serves only on `127.0.0.1`. Cursor semantic selection cannot be fully reproduced statically.
+
 面向 AI 编程代理的仓库指令调试器。选择任意文件，查看 Codex、Claude Code、Cursor 与 GitHub Copilot 会加载哪些规则、加载顺序、匹配原因、Token 估算和潜在冲突。
 
 ## 特点

@@ -55,9 +55,9 @@ After npm publication:
 npx agent-context-lens serve . --file src/index.ts
 ```
 
-## v0.1.1 release workflow
+## v0.2.0 release workflow
 
-After the v0.1.1 PR is merged, run the manual **Release** workflow from GitHub Actions. It repeats the full validation suite, runs `release:dry-run`, creates a source ZIP, package tarball, and `SHA256SUMS`, then creates the GitHub release. Keep `publish_npm` disabled until npm trusted publishing is configured for this repository; the workflow uses OIDC (`id-token: write`) and does not require a long-lived npm token.
+After the v0.2.0 PR is merged, complete the manual first npm publication, then run the manual **Release** workflow from `main`. It repeats validation, creates a source ZIP, package tarball, SPDX SBOM, release notes, and `SHA256SUMS`, then creates the GitHub release.
 
 For the first npm publication, publish manually from the merged, version-tagged commit using an npm account with 2FA. Do not retain an npm token in GitHub Actions. After the package exists, configure npm Trusted Publishing for owner `zzz030981-max`, repository `agent-context-lens`, workflow `release.yml`, and the `npm publish` action. Only then run the Release workflow with `publish_npm=true` for later versions.
 

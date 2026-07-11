@@ -1,0 +1,37 @@
+name: Post-release package verification
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20, 24]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ matrix.node }}
+          registry-url: https://registry.npmjs.org
+      - shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for i in 1 2 3 4 5; do npm view "agent-context-lens@$VERSION" version && break || sleep 10; done
+          npm view "agent-context-lens@$VERSION" bin engines repository license dist.integrity --json
+          npx -y "agent-context-lens@$VERSION" --version
+          npx -y "agent-context-lens@$VERSION" --help
+          npx -y "agent-context-lens@$VERSION" inspect . --file README.md --cwd . --agent all --json
+          npx -y "agent-context-lens@$VERSION" serve "$GITHUB_WORKSPACE" --file README.md --cwd . --port 4173 --no-open > server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for i in 1 2 3 4 5; do curl --fail http://127.0.0.1:4173/api/files && break || sleep 2; done
+          curl --fail http://127.0.0.1:4173/
+          curl --fail "http://127.0.0.1:4173/api/report?file=README.md&cwd=.&agent=all" | node -e "let b='';process.stdin.on('data',d=>b+=d).on('end',()=>{const r=JSON.parse(b);if(r.schemaVersion!=='1.1')process.exit(1)})"

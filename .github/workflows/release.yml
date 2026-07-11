@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_npm:
-        description: Publish the CLI package to npm using trusted publishing
+        description: Publish to npm through trusted publishing after it is configured
         required: true
         default: false
         type: boolean
@@ -13,32 +13,41 @@ permissions:
   contents: write
   id-token: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
-          node-version: "24"
+          node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - run: npm install --global npm@latest
-      - run: node --version
-      - run: npm --version
-      - run: node -e "if (Number(process.versions.node.split('.')[0]) < 24) process.exit(1)"
+      - run: npm install --global npm@11.5.1
+      - run: node -e "if (Number(process.versions.node.split('.')[0]) < 22) process.exit(1)"
       - run: node -e "const { execSync } = require('node:child_process'); const [major, minor] = execSync('npm --version').toString().trim().split('.').map(Number); if (major < 11 || (major === 11 && minor < 5)) process.exit(1)"
       - run: npm ci
+      - run: npm run versions:check
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - run: npm run package:inspect
       - run: npm run test:pack
-      - run: npm audit --audit-level=high
+      - run: npm run test:server-pack
       - run: npm run release:dry-run
-      - name: Create GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create v0.1.1 release/* --target "$GITHUB_SHA" --title "Agent Context Lens v0.1.1" --generate-notes
+      - run: npm audit --audit-level=high
+      - id: version
+        run: echo "value=$(node -p \"require('./apps/cli/package.json').version\")" >> "$GITHUB_OUTPUT"
+      - run: test "$(git rev-list -n 1 v${{ steps.version.outputs.value }})" = "$GITHUB_SHA"
       - name: Publish to npm
         if: ${{ inputs.publish_npm }}
         run: npm publish -w agent-context-lens
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v${{ steps.version.outputs.value }}" release/* --target "$GITHUB_SHA" --title "Agent Context Lens v${{ steps.version.outputs.value }}" --notes-file release/release-notes.md
