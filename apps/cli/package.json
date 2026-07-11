@@ -1,6 +1,6 @@
 {
   "name": "agent-context-lens",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "bin": {
     "contextlens": "dist/index.js"
@@ -23,7 +23,7 @@
     "@types/node": "^24.0.10",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
-    "@agent-context-lens/core": "0.1.0"
+    "@agent-context-lens/core": "0.1.1"
   },
   "description": "DevTools for AI coding instructions \u2014 trace what Codex, Claude Code, Cursor, and Copilot load for any file.",
   "license": "MIT",

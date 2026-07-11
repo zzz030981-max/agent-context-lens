@@ -55,6 +55,10 @@ After npm publication:
 npx agent-context-lens serve . --file src/index.ts
 ```
 
+## v0.1.1 release workflow
+
+After the v0.1.1 PR is merged, run the manual **Release** workflow from GitHub Actions. It repeats the full validation suite, creates a source ZIP, package tarball, and `SHA256SUMS`, then creates the GitHub release. Keep `publish_npm` disabled until npm trusted publishing is configured for this repository; the workflow uses OIDC (`id-token: write`) and does not require a long-lived npm token.
+
 ## Ongoing maintenance
 
 - `.github/dependabot.yml` opens weekly dependency update pull requests.

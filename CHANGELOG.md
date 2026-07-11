@@ -2,6 +2,20 @@
 
 All notable changes follow Keep a Changelog and Semantic Versioning.
 
+## [0.1.1] - 2026-07-11
+
+### Changed
+
+- Separate the inspected target file from the agent working directory (`--cwd`).
+- Model Codex project guidance from repository root through cwd, with the documented default 32 KiB budget.
+- Distinguish Claude startup context, lazy nested context, and path-scoped rules; expose import limits and unresolved imports.
+- Add Copilot cloud-agent, code-review, and IDE-chat surface selection plus `excludeAgent` support.
+- Upgrade JSON reports to schema 1.1 with working-directory and Copilot-surface metadata.
+
+### Added
+
+- Windows-safe package smoke coverage, adapter regression tests, and a manual v0.1.1 release workflow.
+
 ## [0.1.0] - 2026-07-11
 
 ### Added

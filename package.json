@@ -1,6 +1,6 @@
 {
   "name": "agent-context-lens-monorepo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Explain which repository instructions AI coding agents receive for any file.",
   "license": "MIT",
