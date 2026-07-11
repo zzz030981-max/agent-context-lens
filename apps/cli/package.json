@@ -20,9 +20,9 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
-    "@types/node": "^24.0.10",
+    "@types/node": "^26.1.1",
     "tsup": "^8.5.0",
-    "typescript": "^5.8.3",
+    "typescript": "^7.0.2",
     "@agent-context-lens/core": "0.2.0"
   },
   "description": "DevTools for AI coding instructions \u2014 trace what Codex, Claude Code, Cursor, and Copilot load for any file.",
