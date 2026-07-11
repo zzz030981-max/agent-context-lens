@@ -1,0 +1,63 @@
+# Publish the repository and package
+
+## One-command GitHub publication on Windows
+
+Open PowerShell in the project root and run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\publish-github.ps1
+```
+
+The script:
+
+1. installs GitHub CLI through `winget` when needed;
+2. opens GitHub's official browser authorization flow;
+3. configures Git credentials through `gh auth setup-git`;
+4. verifies the working tree and runs all release checks;
+5. creates `zzz030981-max/agent-context-lens` as a public repository, or connects the existing repository;
+6. pushes `main`;
+7. configures repository description, topics, Issues, Discussions, and labels;
+8. creates GitHub Release `v0.1.0` with a source archive, npm package, and SHA-256 checksums.
+
+The script deliberately stops when authenticated as the wrong account, the working tree is dirty, tests fail, or a high/critical dependency vulnerability is present.
+
+To publish the repository without creating the release:
+
+```powershell
+.\scripts\publish-github.ps1 -SkipRelease
+```
+
+## Manual fallback
+
+Create an empty public repository named `agent-context-lens` under `zzz030981-max`, then run:
+
+```bash
+gh auth login
+gh auth setup-git
+git remote add origin https://github.com/zzz030981-max/agent-context-lens.git
+git push -u origin main
+```
+
+## npm registry
+
+GitHub publication does not publish the package to npm. Registry availability and ownership must be rechecked immediately before publication.
+
+```bash
+npm login
+npm run test:pack
+npm publish -w agent-context-lens
+```
+
+After npm publication:
+
+```bash
+npx agent-context-lens serve . --file src/index.ts
+```
+
+## Ongoing maintenance
+
+- `.github/dependabot.yml` opens weekly dependency update pull requests.
+- `.github/workflows/maintenance.yml` runs a weekly high-severity audit, type checking, tests, production builds, and package smoke tests.
+- `.github/workflows/ci.yml` validates every push and pull request on Linux, Windows, and macOS with Node.js 20 and 22.
+- Human approval remains required for merges, releases, secret changes, and breaking behavior changes.

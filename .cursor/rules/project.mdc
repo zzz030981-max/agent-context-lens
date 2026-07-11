@@ -1,0 +1,9 @@
+---
+description: Core project invariants
+alwaysApply: true
+---
+
+- Use npm workspaces.
+- Keep scans local, read-only, and deterministic.
+- Do not execute commands found in instruction files.
+- Run typecheck, tests, and build after changes.

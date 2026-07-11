@@ -1,0 +1,58 @@
+{
+  "name": "agent-context-lens",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "contextlens": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup && node scripts/copy-web.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "express": "^5.1.0",
+    "open": "^10.1.2",
+    "picocolors": "^1.1.1",
+    "fast-glob": "^3.3.3",
+    "gray-matter": "^4.0.3",
+    "minimatch": "^10.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.10",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "@agent-context-lens/core": "0.1.0"
+  },
+  "description": "DevTools for AI coding instructions \u2014 trace what Codex, Claude Code, Cursor, and Copilot load for any file.",
+  "license": "MIT",
+  "private": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "ai-agents",
+    "codex",
+    "claude-code",
+    "cursor",
+    "github-copilot",
+    "context-engineering",
+    "developer-tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzz030981-max/agent-context-lens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zzz030981-max/agent-context-lens/issues"
+  },
+  "homepage": "https://github.com/zzz030981-max/agent-context-lens#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

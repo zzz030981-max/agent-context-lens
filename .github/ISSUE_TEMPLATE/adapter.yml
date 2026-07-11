@@ -1,0 +1,21 @@
+name: Adapter accuracy report
+description: Report a mismatch between an agent's documented/runtime behavior and this resolver.
+title: "[Adapter]: "
+labels: [adapter, accuracy]
+body:
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agent
+      options: [Codex, Claude Code, Cursor, GitHub Copilot]
+    validations: {required: true}
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link official documentation or provide a reproducible runtime trace and exact tool version.
+    validations: {required: true}
+  - type: textarea
+    id: expected
+    attributes: {label: Expected behavior}
+    validations: {required: true}

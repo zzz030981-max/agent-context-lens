@@ -1,0 +1,8 @@
+---
+description: Rules for authentication code
+globs: "src/auth/**/*.ts"
+alwaysApply: false
+---
+
+- Use pnpm for dependency installation.
+- Use double quotes.

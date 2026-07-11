@@ -1,0 +1,5 @@
+- This is a TypeScript npm-workspaces project.
+- Preserve deterministic, local-only, read-only analysis.
+- Do not add telemetry or default network calls.
+- Adapter claims require first-party documentation or pinned-version evidence.
+- Validate with `npm run typecheck`, `npm test`, and `npm run build`.

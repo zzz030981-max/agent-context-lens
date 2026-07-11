@@ -1,0 +1,8 @@
+---
+description: Repository defaults
+globs: "**/*"
+alwaysApply: true
+---
+
+- Use npm for dependency installation.
+- Use 2-space indentation.
