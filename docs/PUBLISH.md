@@ -18,7 +18,7 @@ The script:
 5. creates `zzz030981-max/agent-context-lens` as a public repository, or connects the existing repository;
 6. pushes `main`;
 7. configures repository description, topics, Issues, Discussions, and labels;
-8. creates GitHub Release `v0.1.0` with a source archive, npm package, and SHA-256 checksums.
+8. configures the repository; releases are created later through the documented v0.2.0 release flow.
 
 The script deliberately stops when authenticated as the wrong account, the working tree is dirty, tests fail, or a high/critical dependency vulnerability is present.
 
@@ -65,5 +65,5 @@ For the first npm publication, publish manually from the merged, version-tagged 
 
 - `.github/dependabot.yml` opens weekly dependency update pull requests.
 - `.github/workflows/maintenance.yml` runs a weekly high-severity audit, type checking, tests, production builds, and package smoke tests.
-- `.github/workflows/ci.yml` validates every push and pull request on Linux, Windows, and macOS with Node.js 20 and 22.
+- `.github/workflows/ci.yml` validates every push and pull request on Linux, Windows, and macOS with Node.js 20 and 24, plus Ubuntu on Node.js 22.
 - Human approval remains required for merges, releases, secret changes, and breaking behavior changes.

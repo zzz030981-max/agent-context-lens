@@ -10,10 +10,10 @@
 ## First release
 
 1. Push the repository.
-2. Confirm GitHub Actions passes on Node 20 and 22.
-3. Create release `v0.1.0` from the initial commit.
-4. Attach the source ZIP and a screenshot/GIF of the conflicting-rules fixture.
-5. Pin an issue requesting pinned-version Cursor verification.
+2. Confirm the `CI success` required check passes on Node 20, 22, and 24.
+3. Complete the manual first npm publication, then run the Release workflow from `main` to create `v0.2.0`.
+4. Verify the source ZIP, package tarball, SPDX SBOM, release notes, and `SHA256SUMS` assets.
+5. Pin an issue requesting version-pinned Cursor verification.
 
 ## README media
 
