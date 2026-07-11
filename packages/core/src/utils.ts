@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 
-export const toPosix = (value: string): string => value.split(path.sep).join("/");
+export const toPosix = (value: string): string => value.replace(/\\/g, "/").split(path.sep).join("/");
 
 export async function exists(file: string): Promise<boolean> {
   try { await fs.access(file); return true; } catch { return false; }
@@ -10,6 +10,58 @@ export async function exists(file: string): Promise<boolean> {
 
 export async function readText(file: string): Promise<string> {
   return fs.readFile(file, "utf8");
+}
+
+export async function resolveSafeRepositoryPath(
+  realRoot: string,
+  requestedPath: string,
+  options: { mustExist?: boolean; expectedType?: "file" | "directory" } = {}
+): Promise<string> {
+  const candidate = path.resolve(requestedPath);
+  const mustExist = options.mustExist ?? true;
+  let existing = candidate;
+  while (true) {
+    try {
+      const realCandidate = await fs.realpath(existing);
+      if (!isWithin(realRoot, realCandidate)) throw new Error(`Path escapes the repository root: ${requestedPath}`);
+      if (existing === candidate && options.expectedType) {
+        const stat = await fs.stat(realCandidate);
+        if ((options.expectedType === "file" && !stat.isFile()) || (options.expectedType === "directory" && !stat.isDirectory())) {
+          throw new Error(`Path is not a ${options.expectedType}: ${requestedPath}`);
+        }
+      }
+      return candidate;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Path escapes")) throw error;
+      if (mustExist || existing === path.dirname(existing)) throw error;
+      existing = path.dirname(existing);
+    }
+  }
+}
+
+export async function readRepositoryText(realRoot: string, file: string): Promise<string> {
+  await resolveSafeRepositoryPath(realRoot, file, { expectedType: "file" });
+  return readText(file);
+}
+
+export async function findEscapingSymbolicLinks(realRoot: string, directory: string): Promise<string[]> {
+  const blocked: string[] = [];
+  async function walk(current: string): Promise<void> {
+    let entries: import("node:fs").Dirent[];
+    try { entries = await fs.readdir(current, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      const file = path.join(current, entry.name);
+      if (entry.isSymbolicLink()) {
+        try {
+          if (!isWithin(realRoot, await fs.realpath(file))) blocked.push(file);
+        } catch { blocked.push(file); }
+      } else if (entry.isDirectory()) {
+        await walk(file);
+      }
+    }
+  }
+  await walk(directory);
+  return blocked;
 }
 
 export function relativeTo(root: string, file: string): string {
@@ -40,7 +92,7 @@ export function ancestorDirectories(root: string, targetDir: string): string[] {
   const normalizedRoot = path.resolve(root);
   let current = path.resolve(targetDir);
   const dirs: string[] = [];
-  while (current.startsWith(normalizedRoot)) {
+  while (isWithin(normalizedRoot, current)) {
     dirs.push(current);
     if (current === normalizedRoot) break;
     const parent = path.dirname(current);
@@ -48,6 +100,15 @@ export function ancestorDirectories(root: string, targetDir: string): string[] {
     current = parent;
   }
   return dirs.reverse();
+}
+
+export function isWithin(root: string, candidate: string): boolean {
+  const relative = path.relative(path.resolve(root), path.resolve(candidate));
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+export function resolveRepositoryPath(root: string, value: string): string {
+  return path.resolve(root, value.replace(/[\\/]+/g, path.sep));
 }
 
 export function stripFrontmatter(content: string): string {

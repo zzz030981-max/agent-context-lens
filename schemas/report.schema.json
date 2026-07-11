@@ -1,14 +1,26 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/agent-context-lens/report.schema.json",
+  "$id": "https://raw.githubusercontent.com/zzz030981-max/agent-context-lens/main/schemas/report.schema.json",
   "title": "Agent Context Lens repository report",
   "type": "object",
-  "required": ["schemaVersion", "generatedAt", "repositoryRoot", "targetFile", "traces", "summary"],
+  "required": ["schemaVersion", "generatedAt", "repositoryRoot", "targetFile", "workingDirectory", "options", "traces", "summary"],
+  "additionalProperties": false,
   "properties": {
-    "schemaVersion": {"const": "1.0"},
+    "schemaVersion": {"const": "1.1"},
     "generatedAt": {"type": "string", "format": "date-time"},
     "repositoryRoot": {"type": "string"},
     "targetFile": {"type": "string"},
+    "workingDirectory": {"type": "string"},
+    "options": {
+      "type": "object",
+      "required": ["agents"],
+      "properties": {
+        "agents": {"type": "array", "items": {"enum": ["codex", "claude", "cursor", "copilot"]}},
+        "copilotSurface": {"enum": ["cloud-agent", "code-review"]},
+        "copilotBaseRoot": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
     "traces": {
       "type": "array",
       "items": {

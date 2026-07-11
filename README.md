@@ -22,12 +22,19 @@ A modern repository may contain `AGENTS.md`, `CLAUDE.md`, `.claude/rules`, `.cur
 
 Agent Context Lens is the equivalent of a CSS cascade inspector for AI coding instructions.
 
-## Quick start
+## Install and run
+
+```bash
+npx -y agent-context-lens@0.2.0 inspect . --file src/index.ts --cwd . --agent all
+npm install --global agent-context-lens@0.2.0
+```
+
+## Development
 
 ```bash
 npm install
 npm run build
-node apps/cli/dist/index.js serve . --file src/index.ts
+node apps/cli/dist/index.js serve . --file src/index.ts --cwd .
 ```
 
 Open the printed local URL. Nothing is uploaded.
@@ -35,7 +42,7 @@ Open the printed local URL. Nothing is uploaded.
 CLI-only trace:
 
 ```bash
-node apps/cli/dist/index.js inspect . --file src/index.ts --agent all
+node apps/cli/dist/index.js inspect . --file src/index.ts --cwd . --agent all
 ```
 
 JSON for automation:
@@ -43,9 +50,22 @@ JSON for automation:
 ```bash
 node apps/cli/dist/index.js inspect . \
   --file src/index.ts \
+  --cwd . \
+  --copilot-surface cloud-agent \
   --agent codex,claude \
   --json \
   --output .contextlens/report.json
+```
+
+Copilot code review must be given a separately prepared PR base checkout. The scan never checks out or reads Git history itself:
+
+```bash
+contextlens inspect ./feature-worktree \
+  --file src/index.ts \
+  --cwd . \
+  --agent copilot \
+  --copilot-surface code-review \
+  --copilot-base-root ../main-worktree
 ```
 
 ## What the report explains
@@ -92,20 +112,12 @@ packages/core  adapters, resolver, analyzers, report schema
 fixtures       reproducible test repositories
 ```
 
-## Development
-
-```bash
-npm install
-npm run typecheck
-npm test
-npm run build
-```
-
 Run the intentional-conflict demo:
 
 ```bash
 node apps/cli/dist/index.js serve fixtures/conflicting-rules \
   --file src/auth/login.ts \
+  --cwd . \
   --no-open
 ```
 
@@ -127,6 +139,7 @@ See [SECURITY.md](SECURITY.md).
 - User-level and organization-managed instructions are excluded unless they are part of the scanned repository.
 - Cursor agent-selected rules are nondeterministic and therefore displayed separately.
 - Copilot feature support differs between IDE, chat, code review, and cloud-agent surfaces.
+- Code-review reports require a caller-provided PR base checkout; generic IDE chat is not modeled.
 
 ## Contributing
 

@@ -2,6 +2,8 @@ node_modules/
 dist/
 .contextlens/
 coverage/
+release/
+agent-context-lens-*.tgz
 *.log
 .DS_Store
 .env

@@ -7,10 +7,12 @@ import express from "express";
 import open from "open";
 import pc from "picocolors";
 import { Command } from "commander";
-import { resolveRepository, supportedAgents, type AgentId, type RepositoryReport } from "@agent-context-lens/core";
+import { resolveRepository, supportedAgents, type AgentId, type CopilotSurface, type RepositoryReport } from "@agent-context-lens/core";
 
+const packageJson = JSON.parse(await fs.readFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "package.json"), "utf8")) as { version: string };
 const program = new Command();
-program.name("contextlens").description("Explain which repository instructions AI coding agents receive.").version("0.1.0");
+program.name("contextlens").description("Explain which repository instructions AI coding agents receive.").version(packageJson.version);
+program.addHelpText("after", "\nInspect options: --cwd <path>, --copilot-surface <surface>, --copilot-base-root <path>\n");
 
 function parseAgents(value: string): AgentId[] {
   if (value === "all") return supportedAgents;
@@ -18,6 +20,13 @@ function parseAgents(value: string): AgentId[] {
   const invalid = agents.filter(agent => !supportedAgents.includes(agent));
   if (invalid.length) throw new Error(`Unsupported agent(s): ${invalid.join(", ")}`);
   return agents;
+}
+
+function parseCopilotSurface(value: string | undefined): CopilotSurface | undefined {
+  if (!value) return undefined;
+  const surfaces: CopilotSurface[] = ["cloud-agent", "code-review"];
+  if (!surfaces.includes(value as CopilotSurface)) throw new Error(`Unsupported Copilot surface: ${value}`);
+  return value as CopilotSurface;
 }
 
 function printReport(report: RepositoryReport): void {
@@ -38,19 +47,22 @@ function printReport(report: RepositoryReport): void {
   console.log(`\n${report.summary.errors} errors, ${report.summary.warnings} warnings, ${report.summary.totalFindings} total findings\n`);
 }
 
-async function generateReport(root: string, file: string, agents: AgentId[]): Promise<RepositoryReport> {
-  return resolveRepository({ repositoryRoot: root, targetFile: file, agents });
+async function generateReport(root: string, file: string, cwd: string, agents: AgentId[], copilotSurface?: CopilotSurface, copilotBaseRoot?: string): Promise<RepositoryReport> {
+  return resolveRepository({ repositoryRoot: root, targetFile: file, workingDirectory: cwd, agents, copilotSurface, copilotBaseRoot });
 }
 
 program.command("inspect")
   .argument("[root]", "repository root", ".")
   .option("-f, --file <path>", "target file relative to repository root", "README.md")
+  .option("--cwd <path>", "agent working directory relative to repository root", ".")
   .option("-a, --agent <agents>", "codex,claude,cursor,copilot, or all", "all")
+  .option("--copilot-surface <surface>", "cloud-agent or code-review")
+  .option("--copilot-base-root <path>", "base-branch checkout required for Copilot code review")
   .option("--json", "print JSON")
   .option("--output <path>", "write JSON report to a file")
   .action(async (root, options) => {
     try {
-      const report = await generateReport(root, options.file, parseAgents(options.agent));
+      const report = await generateReport(root, options.file, options.cwd, parseAgents(options.agent), parseCopilotSurface(options.copilotSurface), options.copilotBaseRoot);
       if (options.output) {
         const out = path.resolve(options.output);
         await fs.mkdir(path.dirname(out), { recursive: true });
@@ -68,7 +80,10 @@ program.command("inspect")
 program.command("serve")
   .argument("[root]", "repository root", ".")
   .option("-f, --file <path>", "initial target file", "README.md")
+  .option("--cwd <path>", "initial agent working directory", ".")
   .option("-p, --port <port>", "port", "4173")
+  .option("--copilot-surface <surface>", "cloud-agent or code-review")
+  .option("--copilot-base-root <path>", "base-branch checkout required for Copilot code review")
   .option("--no-open", "do not open the browser")
   .action(async (root, options) => {
     const repositoryRoot = path.resolve(root);
@@ -77,8 +92,11 @@ program.command("serve")
     app.get("/api/report", async (req, res) => {
       try {
         const targetFile = typeof req.query.file === "string" ? req.query.file : options.file;
+        const cwd = typeof req.query.cwd === "string" ? req.query.cwd : options.cwd;
         const agents = typeof req.query.agent === "string" ? parseAgents(req.query.agent) : supportedAgents;
-        res.json(await generateReport(repositoryRoot, targetFile, agents));
+        const surface = typeof req.query.copilotSurface === "string" ? parseCopilotSurface(req.query.copilotSurface) : parseCopilotSurface(options.copilotSurface);
+        const baseRoot = typeof req.query.copilotBaseRoot === "string" ? req.query.copilotBaseRoot : options.copilotBaseRoot;
+        res.json(await generateReport(repositoryRoot, targetFile, cwd, agents, surface, baseRoot));
       } catch (error) {
         res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
       }
@@ -106,7 +124,7 @@ program.command("serve")
     app.get("/{*splat}", (_req, res) => res.sendFile(path.join(webDist, "index.html")));
     const port = Number(options.port);
     app.listen(port, "127.0.0.1", async () => {
-      const url = `http://127.0.0.1:${port}?file=${encodeURIComponent(options.file)}`;
+      const url = `http://127.0.0.1:${port}?file=${encodeURIComponent(options.file)}&cwd=${encodeURIComponent(options.cwd)}${options.copilotSurface ? `&copilotSurface=${encodeURIComponent(options.copilotSurface)}` : ""}${options.copilotBaseRoot ? `&copilotBaseRoot=${encodeURIComponent(options.copilotBaseRoot)}` : ""}`;
       console.log(`Agent Context Lens: ${url}`);
       if (options.open) await open(url);
     });
