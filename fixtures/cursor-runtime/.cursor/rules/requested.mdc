@@ -1,0 +1,6 @@
+---
+description: Request this rule when Cursor needs the special runtime marker.
+alwaysApply: false
+---
+
+CURSOR_REQUESTED_MARKER

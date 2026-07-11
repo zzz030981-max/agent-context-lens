@@ -88,7 +88,7 @@ contextlens inspect ./feature-worktree \
 |---|---|---|
 | Codex | `AGENTS.override.md`, `AGENTS.md` | Documented |
 | Claude Code | `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/**/*.md`, `@imports` | Documented |
-| Cursor | `.cursor/rules/**/*.mdc`, `.cursorrules` | Inferred pending pinned runtime tests |
+| Cursor | `.cursor/rules/**/*.mdc`, `.cursorrules` | Inferred; pinned runtime probe verifies always/glob markers |
 | GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/**/*.instructions.md`, nearest `AGENTS.md` | Documented, surface-dependent |
 
 See [Adapter evidence and caveats](docs/ADAPTERS.md).

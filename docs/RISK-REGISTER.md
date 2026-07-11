@@ -6,13 +6,14 @@ Last reviewed: **2026-07-11**.
 
 ### Cursor rule selection
 
-Cursor can select some rules semantically rather than through a deterministic path predicate. The documentation application is dynamically rendered, and a pinned runtime verification harness is not yet included.
+Cursor can select some rules semantically rather than through a deterministic path predicate. The pinned runtime probe verifies only `alwaysApply` and matching-glob markers; agent-requested selection remains model-dependent.
 
 **Mitigation implemented:**
 
 - `alwaysApply` and `globs` behavior is labeled `inferred`.
 - Rules without deterministic triggers are shown as `manual` and excluded from effective context.
-- The roadmap requires pinned-version verification before upgrading confidence.
+- The runtime workflow records the pinned Cursor build and its deterministic marker evidence.
+- Agent-requested rules remain `inferred` or `manual` even after a successful probe.
 
 ## Important omissions discovered and resolved during development
 
