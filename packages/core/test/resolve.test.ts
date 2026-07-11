@@ -2,6 +2,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import Ajv from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
 import { resolveRepository } from "../src/index.js";
 
 const fixture = path.resolve(process.cwd(), "../../fixtures/conflicting-rules");
@@ -170,10 +172,14 @@ describe("resolveRepository", () => {
     await fs.mkdir(path.join(root, "src"));
     await fs.writeFile(path.join(root, ".github", "instructions", "typescript.instructions.md"), "---\napplyTo: src/**/*.ts\nexcludeAgent: code-review\n---\nCloud only.\n");
     await fs.writeFile(path.join(root, "src", "index.ts"), "export {};\n");
-    const report = await resolveRepository({ repositoryRoot: root, targetFile: "src/index.ts", agents: ["copilot"], copilotSurface: "code-review" });
+    const report = await resolveRepository({ repositoryRoot: root, targetFile: "src/index.ts", agents: ["copilot"], copilotSurface: "code-review", copilotBaseRoot: root });
     const source = report.traces[0]?.sources.find(item => item.source.file.endsWith("typescript.instructions.md"));
     expect(source?.matched).toBe(false);
     expect(source?.metadata?.excludedBy).toEqual(["code-review"]);
+  });
+
+  it("rejects the removed generic ide-chat surface", async () => {
+    await expect(resolveRepository({ repositoryRoot: fixture, targetFile: "README.md", agents: ["copilot"], copilotSurface: "ide-chat" as never })).rejects.toThrow("Unsupported Copilot surface");
   });
 
   it("honors array-form Copilot excludeAgent and does not match missing applyTo", async () => {
@@ -194,9 +200,73 @@ describe("resolveRepository", () => {
     await fs.writeFile(path.join(root, "AGENTS.md"), "Cloud agent guidance.\n");
     await fs.writeFile(path.join(root, "src", "index.ts"), "export {};\n");
     const cloud = await resolveRepository({ repositoryRoot: root, targetFile: "src/index.ts", agents: ["copilot"], copilotSurface: "cloud-agent" });
-    const review = await resolveRepository({ repositoryRoot: root, targetFile: "src/index.ts", agents: ["copilot"], copilotSurface: "code-review" });
+    const base = await temporaryRepository();
+    await fs.mkdir(path.join(base, "src"), { recursive: true });
+    await fs.writeFile(path.join(base, "AGENTS.md"), "Base agent guidance.\n");
+    await fs.writeFile(path.join(base, "src", "index.ts"), "export {};\n");
+    const review = await resolveRepository({ repositoryRoot: root, targetFile: "src/index.ts", agents: ["copilot"], copilotSurface: "code-review", copilotBaseRoot: base });
     expect(cloud.traces[0]?.includedSources.some(source => source.source.file === "AGENTS.md")).toBe(true);
     expect(review.traces[0]?.includedSources.some(source => source.source.file === "AGENTS.md")).toBe(false);
+  });
+
+  it("rejects code review without a supplied base root", async () => {
+    await expect(resolveRepository({ repositoryRoot: fixture, targetFile: "src/auth/login.ts", agents: ["copilot"], copilotSurface: "code-review" })).rejects.toThrow("Copilot base root is required");
+  });
+
+  it("reads Copilot code review instructions from the supplied base root", async () => {
+    const feature = await temporaryRepository();
+    const base = await temporaryRepository();
+    for (const root of [feature, base]) await fs.mkdir(path.join(root, ".github", "instructions"), { recursive: true });
+    await fs.mkdir(path.join(feature, "src"), { recursive: true });
+    await fs.mkdir(path.join(base, "src"), { recursive: true });
+    await fs.writeFile(path.join(feature, ".github", "copilot-instructions.md"), "Feature instructions.\n");
+    await fs.writeFile(path.join(base, ".github", "copilot-instructions.md"), "Base instructions.\n");
+    await fs.writeFile(path.join(base, ".github", "instructions", "typescript.instructions.md"), "---\napplyTo: src/**/*.ts\n---\nBase path rule.\n");
+    await fs.writeFile(path.join(feature, "src", "index.ts"), "export {};\n");
+    await fs.writeFile(path.join(base, "src", "index.ts"), "export {};\n");
+    const report = await resolveRepository({ repositoryRoot: feature, targetFile: "src/index.ts", agents: ["copilot"], copilotSurface: "code-review", copilotBaseRoot: base });
+    const sources = report.traces[0]?.includedSources ?? [];
+    expect(sources.some(source => source.content.includes("Base instructions"))).toBe(true);
+    expect(sources.some(source => source.content.includes("Feature instructions"))).toBe(false);
+    expect(sources.some(source => source.content.includes("Base path rule"))).toBe(true);
+    expect(report.options.copilotBaseRoot).toBe(base);
+  });
+
+  it("rejects a working-directory symlink that escapes the repository", async () => {
+    if (process.platform === "win32") return;
+    const root = await temporaryRepository();
+    const outside = await temporaryRepository();
+    await fs.mkdir(path.join(root, "src"));
+    await fs.writeFile(path.join(root, "src", "index.ts"), "export {};\n");
+    await fs.symlink(outside, path.join(root, "external"));
+    await expect(resolveRepository({ repositoryRoot: root, targetFile: "src/index.ts", workingDirectory: "external", agents: ["codex"] })).rejects.toThrow("inside the repository root");
+  });
+
+  it("blocks Claude imports through symlinks that escape the repository", async () => {
+    if (process.platform === "win32") return;
+    const root = await temporaryRepository();
+    const outside = await temporaryRepository();
+    await fs.writeFile(path.join(root, "CLAUDE.md"), "@linked.md\n");
+    await fs.writeFile(path.join(root, "index.ts"), "export {};\n");
+    await fs.writeFile(path.join(outside, "outside.md"), "Not repository local.\n");
+    await fs.symlink(path.join(outside, "outside.md"), path.join(root, "linked.md"));
+    const report = await resolveRepository({ repositoryRoot: root, targetFile: "index.ts", agents: ["claude"] });
+    const source = report.traces[0]?.includedSources[0];
+    expect(source?.content).not.toContain("Not repository local");
+    expect(source?.metadata?.externalImports).toContain("linked.md");
+  });
+
+  it("does not read Claude path rules through symlinks that escape the repository", async () => {
+    if (process.platform === "win32") return;
+    const root = await temporaryRepository();
+    const outside = await temporaryRepository();
+    await fs.mkdir(path.join(root, ".claude", "rules"), { recursive: true });
+    await fs.writeFile(path.join(root, "index.ts"), "export {};\n");
+    await fs.writeFile(path.join(outside, "outside.md"), "---\npaths: **\n---\nNot repository local.\n");
+    await fs.symlink(path.join(outside, "outside.md"), path.join(root, ".claude", "rules", "outside.md"));
+    const report = await resolveRepository({ repositoryRoot: root, targetFile: "index.ts", agents: ["claude"] });
+    expect(report.traces[0]?.sources.some(source => source.normalizedContent.includes("Not repository local"))).toBe(false);
+    expect(report.traces[0]?.findings.some(finding => finding.title === "Blocked repository escape")).toBe(true);
   });
 
   it("rejects working directories outside the repository", async () => {
@@ -212,5 +282,14 @@ describe("resolveRepository", () => {
     const report = await resolveRepository({ repositoryRoot: root, targetFile: "src\\auth\\login.ts", workingDirectory: "src\\auth", agents: ["codex"] });
     expect(report.workingDirectory).toBe("src/auth");
     expect(report.schemaVersion).toBe("1.1");
+  });
+
+  it("validates a generated report against the v1.1 JSON schema", async () => {
+    const report = await resolveRepository({ repositoryRoot: fixture, targetFile: "README.md", agents: ["codex"] });
+    const schema = JSON.parse(await fs.readFile(path.resolve(process.cwd(), "../../schemas/report.schema.json"), "utf8"));
+    const validator = new Ajv({ strict: false });
+    addFormats(validator);
+    const validate = validator.compile(schema);
+    expect(validate(report)).toBe(true);
   });
 });

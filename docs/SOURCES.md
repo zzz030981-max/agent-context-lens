@@ -44,3 +44,13 @@ Key modeled claims: `.github/copilot-instructions.md`, `.github/instructions/NAM
   https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide
 - GitHub, “Support for different types of custom instructions”
   https://docs.github.com/en/copilot/reference/custom-instructions-support
+
+- npm, “Trusted publishing for npm packages”
+  https://docs.npmjs.com/trusted-publishers/
+
+## Codex source snapshot
+
+- OpenAI Codex configuration schema, pinned source commit:
+  https://github.com/openai/codex/blob/5c19155cbd93bfa099016e7487259f61669823ff/codex-rs/core/config.schema.json
+
+Reviewed: **2026-07-11**. This source documents `project_doc_max_bytes` with a default of `32768` and ordered fallback file names. This project uses the current AGENTS.md documentation for `AGENTS.override.md` precedence. Known gaps remain configured fallback filenames, configured budgets, user-level instructions, and multi-environment behavior; none are reported as verified.

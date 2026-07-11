@@ -22,7 +22,7 @@ function parseAgents(value: string): AgentId[] {
 
 function parseCopilotSurface(value: string | undefined): CopilotSurface | undefined {
   if (!value) return undefined;
-  const surfaces: CopilotSurface[] = ["cloud-agent", "code-review", "ide-chat"];
+  const surfaces: CopilotSurface[] = ["cloud-agent", "code-review"];
   if (!surfaces.includes(value as CopilotSurface)) throw new Error(`Unsupported Copilot surface: ${value}`);
   return value as CopilotSurface;
 }
@@ -45,8 +45,8 @@ function printReport(report: RepositoryReport): void {
   console.log(`\n${report.summary.errors} errors, ${report.summary.warnings} warnings, ${report.summary.totalFindings} total findings\n`);
 }
 
-async function generateReport(root: string, file: string, cwd: string, agents: AgentId[], copilotSurface?: CopilotSurface): Promise<RepositoryReport> {
-  return resolveRepository({ repositoryRoot: root, targetFile: file, workingDirectory: cwd, agents, copilotSurface });
+async function generateReport(root: string, file: string, cwd: string, agents: AgentId[], copilotSurface?: CopilotSurface, copilotBaseRoot?: string): Promise<RepositoryReport> {
+  return resolveRepository({ repositoryRoot: root, targetFile: file, workingDirectory: cwd, agents, copilotSurface, copilotBaseRoot });
 }
 
 program.command("inspect")
@@ -54,12 +54,13 @@ program.command("inspect")
   .option("-f, --file <path>", "target file relative to repository root", "README.md")
   .option("--cwd <path>", "agent working directory relative to repository root", ".")
   .option("-a, --agent <agents>", "codex,claude,cursor,copilot, or all", "all")
-  .option("--copilot-surface <surface>", "cloud-agent, code-review, or ide-chat")
+  .option("--copilot-surface <surface>", "cloud-agent or code-review")
+  .option("--copilot-base-root <path>", "base-branch checkout required for Copilot code review")
   .option("--json", "print JSON")
   .option("--output <path>", "write JSON report to a file")
   .action(async (root, options) => {
     try {
-      const report = await generateReport(root, options.file, options.cwd, parseAgents(options.agent), parseCopilotSurface(options.copilotSurface));
+      const report = await generateReport(root, options.file, options.cwd, parseAgents(options.agent), parseCopilotSurface(options.copilotSurface), options.copilotBaseRoot);
       if (options.output) {
         const out = path.resolve(options.output);
         await fs.mkdir(path.dirname(out), { recursive: true });
@@ -79,7 +80,8 @@ program.command("serve")
   .option("-f, --file <path>", "initial target file", "README.md")
   .option("--cwd <path>", "initial agent working directory", ".")
   .option("-p, --port <port>", "port", "4173")
-  .option("--copilot-surface <surface>", "cloud-agent, code-review, or ide-chat")
+  .option("--copilot-surface <surface>", "cloud-agent or code-review")
+  .option("--copilot-base-root <path>", "base-branch checkout required for Copilot code review")
   .option("--no-open", "do not open the browser")
   .action(async (root, options) => {
     const repositoryRoot = path.resolve(root);
@@ -91,7 +93,8 @@ program.command("serve")
         const cwd = typeof req.query.cwd === "string" ? req.query.cwd : options.cwd;
         const agents = typeof req.query.agent === "string" ? parseAgents(req.query.agent) : supportedAgents;
         const surface = typeof req.query.copilotSurface === "string" ? parseCopilotSurface(req.query.copilotSurface) : parseCopilotSurface(options.copilotSurface);
-        res.json(await generateReport(repositoryRoot, targetFile, cwd, agents, surface));
+        const baseRoot = typeof req.query.copilotBaseRoot === "string" ? req.query.copilotBaseRoot : options.copilotBaseRoot;
+        res.json(await generateReport(repositoryRoot, targetFile, cwd, agents, surface, baseRoot));
       } catch (error) {
         res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
       }
@@ -119,7 +122,7 @@ program.command("serve")
     app.get("/{*splat}", (_req, res) => res.sendFile(path.join(webDist, "index.html")));
     const port = Number(options.port);
     app.listen(port, "127.0.0.1", async () => {
-      const url = `http://127.0.0.1:${port}?file=${encodeURIComponent(options.file)}&cwd=${encodeURIComponent(options.cwd)}${options.copilotSurface ? `&copilotSurface=${encodeURIComponent(options.copilotSurface)}` : ""}`;
+      const url = `http://127.0.0.1:${port}?file=${encodeURIComponent(options.file)}&cwd=${encodeURIComponent(options.cwd)}${options.copilotSurface ? `&copilotSurface=${encodeURIComponent(options.copilotSurface)}` : ""}${options.copilotBaseRoot ? `&copilotBaseRoot=${encodeURIComponent(options.copilotBaseRoot)}` : ""}`;
       console.log(`Agent Context Lens: ${url}`);
       if (options.open) await open(url);
     });

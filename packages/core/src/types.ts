@@ -1,5 +1,5 @@
 export type AgentId = "codex" | "claude" | "cursor" | "copilot";
-export type CopilotSurface = "cloud-agent" | "code-review" | "ide-chat";
+export type CopilotSurface = "cloud-agent" | "code-review";
 export type Confidence = "verified" | "documented" | "inferred" | "unknown";
 export type LoadMode = "startup" | "path-match" | "lazy" | "manual";
 
@@ -32,6 +32,7 @@ export interface InstructionMetadata {
   imports?: string[];
   brokenReferences?: string[];
   externalImports?: string[];
+  blockedPaths?: string[];
   depthLimited?: boolean;
   [key: string]: unknown;
 }
@@ -71,6 +72,7 @@ export interface RepositoryReport {
   options: {
     agents: AgentId[];
     copilotSurface?: CopilotSurface;
+    copilotBaseRoot?: string;
   };
   traces: AgentTrace[];
   summary: {
@@ -88,6 +90,7 @@ export interface ResolveOptions {
   workingDirectory?: string;
   agents?: AgentId[];
   copilotSurface?: CopilotSurface;
+  copilotBaseRoot?: string;
 }
 
 export interface AdapterContext {
@@ -97,10 +100,12 @@ export interface AdapterContext {
   workingDirectoryAbsolute: string;
   workingDirectoryRelative: string;
   copilotSurface?: CopilotSurface;
+  copilotBaseRootAbsolute?: string;
 }
 
 export interface AdapterResult {
   sources: InstructionSource[];
+  blockedPaths?: string[];
   adapterVersion: string;
   specificationDate: string;
   caveats: string[];

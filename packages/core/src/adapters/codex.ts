@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { AgentAdapter, AdapterContext, AdapterResult } from "../types.js";
-import { ancestorDirectories, exists, readText } from "../utils.js";
+import { ancestorDirectories, exists, readRepositoryText } from "../utils.js";
 import { makeSource } from "./common.js";
 
 export const codexAdapter: AgentAdapter = {
@@ -8,6 +8,7 @@ export const codexAdapter: AgentAdapter = {
   async resolve(context: AdapterContext): Promise<AdapterResult> {
     const dirs = ancestorDirectories(context.root, context.workingDirectoryAbsolute);
     const sources = [];
+    const blockedPaths: string[] = [];
     let priority = 10;
     let remainingBytes = 32 * 1024;
     for (const dir of dirs) {
@@ -18,7 +19,8 @@ export const codexAdapter: AgentAdapter = {
         if (await exists(file)) { selected = file; break; }
       }
       if (!selected) continue;
-      const content = await readText(selected);
+      let content: string;
+      try { content = await readRepositoryText(context.root, selected); } catch { blockedPaths.push(selected); continue; }
       if (!content.trim()) continue;
       const originalBytes = Buffer.byteLength(content);
       const loadedContent = truncateUtf8(content, remainingBytes);
@@ -43,6 +45,7 @@ export const codexAdapter: AgentAdapter = {
     }
     return {
       sources,
+      blockedPaths,
       adapterVersion: "codex-agents-md-2026-07",
       specificationDate: "2026-07-11",
       caveats: [

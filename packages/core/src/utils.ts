@@ -12,6 +12,38 @@ export async function readText(file: string): Promise<string> {
   return fs.readFile(file, "utf8");
 }
 
+export async function resolveSafeRepositoryPath(
+  realRoot: string,
+  requestedPath: string,
+  options: { mustExist?: boolean; expectedType?: "file" | "directory" } = {}
+): Promise<string> {
+  const candidate = path.resolve(requestedPath);
+  const mustExist = options.mustExist ?? true;
+  let existing = candidate;
+  while (true) {
+    try {
+      const realCandidate = await fs.realpath(existing);
+      if (!isWithin(realRoot, realCandidate)) throw new Error(`Path escapes the repository root: ${requestedPath}`);
+      if (existing === candidate && options.expectedType) {
+        const stat = await fs.stat(realCandidate);
+        if ((options.expectedType === "file" && !stat.isFile()) || (options.expectedType === "directory" && !stat.isDirectory())) {
+          throw new Error(`Path is not a ${options.expectedType}: ${requestedPath}`);
+        }
+      }
+      return candidate;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Path escapes")) throw error;
+      if (mustExist || existing === path.dirname(existing)) throw error;
+      existing = path.dirname(existing);
+    }
+  }
+}
+
+export async function readRepositoryText(realRoot: string, file: string): Promise<string> {
+  await resolveSafeRepositoryPath(realRoot, file, { expectedType: "file" });
+  return readText(file);
+}
+
 export function relativeTo(root: string, file: string): string {
   const rel = toPosix(path.relative(root, file));
   return rel || ".";

@@ -42,7 +42,8 @@ Modeled from GitHub's custom-instructions documentation:
 
 - `.github/copilot-instructions.md` is repository-wide.
 - `.github/instructions/**/*.instructions.md` uses `applyTo` and can exclude `cloud-agent` or `code-review` with `excludeAgent`.
-- `cloud-agent`, `code-review`, and conservative `ide-chat` surface selection are distinct.
+- Only `cloud-agent` and `code-review` are exposed. Generic IDE chat is intentionally excluded because GitHub's support matrix differs by client.
+- `code-review` requires an explicit `--copilot-base-root` checkout. Repository and path instructions are read from that PR base checkout while target matching uses the inspected checkout's relative target path.
 - Nearest `AGENTS.md` is documented for cloud-agent. Detected `CLAUDE.md` and `GEMINI.md` candidates remain `inferred` when deterministic selection order is undocumented.
 
 Evidence sources: OpenAI agent-loop documentation, Anthropic Claude Code memory documentation, Cursor Rules documentation, and GitHub's repository custom-instructions and support-matrix pages. See `docs/SOURCES.md` for links.

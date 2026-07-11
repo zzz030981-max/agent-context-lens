@@ -1,10 +1,9 @@
 import path from "node:path";
-import fs from "node:fs/promises";
 import fg from "fast-glob";
 import matter from "gray-matter";
 import { minimatch } from "minimatch";
 import type { AgentAdapter, AdapterContext, AdapterResult, InstructionMetadata } from "../types.js";
-import { ancestorDirectories, exists, isWithin, readText, toPosix } from "../utils.js";
+import { ancestorDirectories, exists, isWithin, readRepositoryText, resolveSafeRepositoryPath, toPosix } from "../utils.js";
 import { makeSource } from "./common.js";
 
 interface ImportExpansion {
@@ -38,8 +37,14 @@ async function expandImports(root: string, file: string, content: string, depth 
       brokenReferences.push(ref);
       continue;
     }
+    try {
+      await resolveSafeRepositoryPath(root, resolved, { expectedType: "file" });
+    } catch {
+      externalImports.push(ref);
+      continue;
+    }
     imports.push(toPosix(path.relative(path.dirname(file), resolved)));
-    const imported = await readText(resolved);
+    const imported = await readRepositoryText(root, resolved);
     const expanded = await expandImports(root, resolved, imported, depth + 1, visited, { imports, brokenReferences, externalImports });
     result += `\n\n<!-- contextlens import: ${ref} -->\n${expanded.content}`;
     Object.assign(metadata, expanded.metadata);
@@ -51,6 +56,7 @@ export const claudeAdapter: AgentAdapter = {
   id: "claude",
   async resolve(context: AdapterContext): Promise<AdapterResult> {
     const sources = [];
+    const blockedPaths: string[] = [];
     const targetDirs = ancestorDirectories(context.root, path.dirname(context.targetAbsolute));
     const startupDirs = new Set(ancestorDirectories(context.root, context.workingDirectoryAbsolute));
     let priority = 10;
@@ -60,7 +66,8 @@ export const claudeAdapter: AgentAdapter = {
       const candidates = [path.join(dir, "CLAUDE.md"), path.join(dir, ".claude", "CLAUDE.md"), path.join(dir, "CLAUDE.local.md")];
       for (const file of candidates) {
         if (!(await exists(file))) continue;
-        const raw = await readText(file);
+        let raw: string;
+        try { raw = await readRepositoryText(context.root, file); } catch { blockedPaths.push(file); continue; }
         const expanded = await expandImports(context.root, file, raw);
         sources.push(makeSource({
           root: context.root,
@@ -82,7 +89,8 @@ export const claudeAdapter: AgentAdapter = {
 
     const ruleFiles = await fg(".claude/rules/**/*.md", { cwd: context.root, absolute: true, dot: true, followSymbolicLinks: false });
     for (const file of ruleFiles.sort()) {
-      const raw = await fs.readFile(file, "utf8");
+      let raw: string;
+      try { raw = await readRepositoryText(context.root, file); } catch { blockedPaths.push(file); continue; }
       const parsed = matter(raw);
       const patterns = pathsFromFrontmatter(parsed.data.paths);
       const matched = patterns.length === 0 || patterns.some(pattern => minimatch(context.targetRelative, pattern, { dot: true, matchBase: true }));
@@ -103,6 +111,7 @@ export const claudeAdapter: AgentAdapter = {
 
     return {
       sources: sources.sort((a, b) => a.priority - b.priority || a.source.file.localeCompare(b.source.file)),
+      blockedPaths,
       adapterVersion: "claude-memory-2026-07",
       specificationDate: "2026-07-11",
       caveats: [

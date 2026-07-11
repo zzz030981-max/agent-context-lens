@@ -48,6 +48,7 @@ function App() {
   const [cwd, setCwd] = useState(params.get("cwd") ?? ".");
   const [draftCwd, setDraftCwd] = useState(cwd);
   const [copilotSurface, setCopilotSurface] = useState(params.get("copilotSurface") ?? "cloud-agent");
+  const [copilotBaseRoot, setCopilotBaseRoot] = useState(params.get("copilotBaseRoot") ?? "");
   const [report, setReport] = useState<RepositoryReport | null>(null);
   const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -57,10 +58,10 @@ function App() {
   useEffect(() => { fetch("/api/files").then(r => r.json()).then(setFiles).catch(() => setFiles([])); }, []);
   useEffect(() => {
     setLoading(true); setError(null);
-    fetch(`/api/report?file=${encodeURIComponent(file)}&cwd=${encodeURIComponent(cwd)}&copilotSurface=${encodeURIComponent(copilotSurface)}&agent=all`)
+    fetch(`/api/report?file=${encodeURIComponent(file)}&cwd=${encodeURIComponent(cwd)}&copilotSurface=${encodeURIComponent(copilotSurface)}&copilotBaseRoot=${encodeURIComponent(copilotBaseRoot)}&agent=all`)
       .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error ?? "Unable to generate report"); return data; })
       .then(setReport).catch(e => setError(e.message)).finally(() => setLoading(false));
-  }, [file, cwd, copilotSurface]);
+  }, [file, cwd, copilotSurface, copilotBaseRoot]);
 
   const traces = useMemo(() => report?.traces.filter(t => selected === "all" || t.agent === selected) ?? [], [report, selected]);
   const applyFile = () => {
@@ -68,7 +69,7 @@ function App() {
     const nextCwd = draftCwd.trim();
     if (!nextFile || !nextCwd) return;
     setFile(nextFile); setCwd(nextCwd);
-    history.replaceState({}, "", `?file=${encodeURIComponent(nextFile)}&cwd=${encodeURIComponent(nextCwd)}&copilotSurface=${encodeURIComponent(copilotSurface)}`);
+    history.replaceState({}, "", `?file=${encodeURIComponent(nextFile)}&cwd=${encodeURIComponent(nextCwd)}&copilotSurface=${encodeURIComponent(copilotSurface)}&copilotBaseRoot=${encodeURIComponent(copilotBaseRoot)}`);
   };
 
   return <main>
@@ -81,7 +82,8 @@ function App() {
       <div className="file-picker">
         <label><span>Target file</span><input list="repo-files" value={draftFile} onChange={e => setDraftFile(e.target.value)} onKeyDown={e => e.key === "Enter" && applyFile()} aria-label="Target file"/></label>
         <label><span>Agent working directory</span><input value={draftCwd} onChange={e => setDraftCwd(e.target.value)} onKeyDown={e => e.key === "Enter" && applyFile()} aria-label="Agent working directory"/></label>
-        <label><span>Copilot surface</span><select value={copilotSurface} onChange={e => setCopilotSurface(e.target.value)} aria-label="Copilot surface"><option value="cloud-agent">Cloud agent</option><option value="code-review">Code review</option><option value="ide-chat">IDE chat</option></select></label>
+        <label><span>Copilot surface</span><select value={copilotSurface} onChange={e => setCopilotSurface(e.target.value)} aria-label="Copilot surface"><option value="cloud-agent">Cloud agent</option><option value="code-review">Code review</option></select></label>
+        {copilotSurface === "code-review" && <label><span>Code review base checkout</span><input value={copilotBaseRoot} onChange={e => setCopilotBaseRoot(e.target.value)} aria-label="Copilot code review base checkout" placeholder="../main-worktree"/></label>}
         <datalist id="repo-files">{files.map(item => <option value={item} key={item}/>)}</datalist><button onClick={applyFile}>Inspect file</button>
       </div>
       <p className="selection">Target: <code>{file}</code> · Agent cwd: <code>{cwd}</code> · Copilot: <code>{copilotSurface}</code></p>
