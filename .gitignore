@@ -11,3 +11,4 @@ agent-context-lens-*.tgz
 !.env.example
 
 *.tsbuildinfo
+/.worktrees/
