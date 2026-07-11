@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "allow": ["Read(src/probe.ts)"],
+    "deny": ["Read(.cursor/rules/**)", "Write(**)", "Shell(*)"]
+  }
+}

@@ -19,7 +19,8 @@
     "package:inspect": "node scripts/inspect-package.mjs",
     "test:pack": "npm run build && node scripts/smoke-pack.mjs",
     "test:server-pack": "npm run build && node scripts/smoke-installed-server.mjs",
-    "release:dry-run": "node scripts/build-release-assets.mjs"
+    "release:dry-run": "node scripts/build-release-assets.mjs",
+    "cursor:verify": "node scripts/verify-cursor-runtime.mjs"
   },
   "engines": {
     "node": ">=20"

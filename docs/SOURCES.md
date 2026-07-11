@@ -23,7 +23,7 @@ Key modeled claims: CLAUDE.md hierarchy, lazy subdirectory loading, `.claude/rul
 - Cursor documentation, “Rules”
   https://cursor.com/docs/context/rules
 
-The documentation application is dynamically rendered and was not machine-verifiable in the build environment. `.mdc` frontmatter behavior is therefore labeled `inferred` until a pinned Cursor runtime fixture is added.
+The documentation application is dynamically rendered. The pinned `cursor:verify` fixture verifies `alwaysApply` and matching-glob markers against a recorded Cursor CLI build; agent-requested selection remains `inferred` because it is model-dependent.
 
 ## GitHub Copilot
 

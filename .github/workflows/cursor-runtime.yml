@@ -1,0 +1,26 @@
+name: Cursor runtime verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+      CURSOR_VERSION: 2026.07.09-a3815c0
+      CURSOR_AGENT_BIN: ${{ runner.temp }}/cursor-agent/cursor-agent
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: test -n "$CURSOR_API_KEY" || { echo "::error::Set the CURSOR_API_KEY repository secret before running this verification."; exit 1; }
+      - run: mkdir -p "$(dirname "$CURSOR_AGENT_BIN")" && curl --fail --location --silent --show-error "https://downloads.cursor.com/lab/$CURSOR_VERSION/linux/x64/agent-cli-package.tar.gz" | tar --strip-components=1 -xzf - -C "$(dirname "$CURSOR_AGENT_BIN")"
+      - run: npm ci
+      - run: npm run cursor:verify | tee cursor-runtime-evidence.json
+      - run: cat cursor-runtime-evidence.json >> "$GITHUB_STEP_SUMMARY"

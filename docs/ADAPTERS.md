@@ -34,7 +34,9 @@ Managed organization policy and user-level `~/.claude/CLAUDE.md` are excluded.
 
 `.cursor/rules/**/*.mdc`, `alwaysApply`, `globs`, and legacy `.cursorrules` are parsed from Cursor's public rule format. `alwaysApply` and explicit globs are reported as static triggers; agent-requested and manual rules remain non-deterministic.
 
-**Cursor semantic selection is nondeterministic and cannot be fully reproduced by static analysis.** It remains `inferred` or `manual` until a pinned Cursor runtime fixture is available.
+`npm run cursor:verify` uses a fixed fixture and a pinned Cursor CLI build to verify `alwaysApply` and matching-glob rule markers. The manual `Cursor runtime verification` workflow requires the `CURSOR_API_KEY` repository secret and records its version and evidence in the job summary.
+
+**Cursor semantic selection remains nondeterministic.** Agent-requested rules are recorded as observed or absent by the runtime probe, remain `inferred` or `manual` in reports, and are never promoted to deterministic context.
 
 ## GitHub Copilot
 
