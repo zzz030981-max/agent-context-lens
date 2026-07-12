@@ -48,4 +48,4 @@
 - Test: existing `scripts/smoke-pack.mjs`, `scripts/smoke-installed-server.mjs`
 
 - [x] Run `npm run typecheck`, `npm test`, `npm run build`, `npm run test:pack`, `npm run test:server-pack`, `npm run package:inspect`, `npm audit`, and `git diff --check`.
-- [ ] Commit, push, create a draft PR, and require the full GitHub matrix before merge.
+- [x] Commit, push, create a draft PR, and require the full GitHub matrix before merge.
