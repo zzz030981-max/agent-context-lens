@@ -23,7 +23,7 @@
     "cursor:verify": "node scripts/verify-cursor-runtime.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"
