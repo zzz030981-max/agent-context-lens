@@ -42,7 +42,9 @@ jobs:
       - run: npm run release:dry-run
       - run: npm audit
       - id: version
-        run: echo "value=$(node -p \"require('./apps/cli/package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          version="$(node -p "require('./apps/cli/package.json').version")"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
       - run: test "$(git rev-list -n 1 v${{ steps.version.outputs.value }})" = "$GITHUB_SHA"
       - name: Publish to npm
         if: ${{ inputs.publish_npm }}
