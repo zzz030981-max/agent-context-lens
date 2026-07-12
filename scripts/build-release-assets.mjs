@@ -7,9 +7,12 @@ const root = path.resolve(import.meta.dirname, "..");
 const output = path.resolve(root, process.env.RELEASE_OUTPUT_DIR ?? "release");
 const pkg = JSON.parse(await readFile(path.join(root, "apps", "cli", "package.json"), "utf8"));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-const run = (command, args, options = {}) => process.platform === "win32"
-  ? execFileSync(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", command, ...args], { cwd: root, ...options })
-  : execFileSync(command, args, { cwd: root, ...options });
+const run = (command, args, options = {}) => {
+  if (process.platform === "win32" && command === npm) {
+    return execFileSync(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", command, ...args], { cwd: root, ...options });
+  }
+  return execFileSync(command, args, { cwd: root, ...options });
+};
 
 run("node", ["scripts/check-versions.mjs"]);
 await rm(output, { recursive: true, force: true });
