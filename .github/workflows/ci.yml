@@ -56,7 +56,7 @@ jobs:
       - run: npm run test:pack
       - run: npm run test:server-pack
       - run: npm run release:dry-run
-      - run: npm audit --audit-level=high
+      - run: npm audit
   ci-success:
     name: CI success
     if: always()

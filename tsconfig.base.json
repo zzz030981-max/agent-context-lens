@@ -11,10 +11,9 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "paths": {
       "@agent-context-lens/core": [
-        "packages/core/src/index.ts"
+        "./packages/core/src/index.ts"
       ]
     }
   }
