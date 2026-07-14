@@ -43,4 +43,5 @@ jobs:
     if: needs.credential_check.outputs.configured != 'true'
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Cursor runtime verification skipped: CURSOR_API_KEY is not configured." >> "$GITHUB_STEP_SUMMARY"
+      - run: |
+          echo "Cursor runtime verification skipped: CURSOR_API_KEY is not configured." >> "$GITHUB_STEP_SUMMARY"

@@ -8,5 +8,5 @@ test("Cursor runtime workflow skips honestly when its API key is absent", async 
   assert.match(workflow, /credential_check:/);
   assert.match(workflow, /configured=/);
   assert.match(workflow, /if: needs\.credential_check\.outputs\.configured == 'true'/);
-  assert.match(workflow, /Cursor runtime verification skipped/);
+  assert.match(workflow, /run: \|\s+echo "Cursor runtime verification skipped: CURSOR_API_KEY is not configured\."/);
 });
