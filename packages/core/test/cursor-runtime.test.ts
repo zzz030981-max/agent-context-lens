@@ -3,13 +3,21 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 describe("Cursor runtime evidence", () => {
-  it("requires the always and matching-glob markers while preserving agent-requested observation", async () => {
+  it("records an observed agent-requested rule without promoting it to effective context", async () => {
     // @ts-expect-error The runtime probe is intentionally dependency-free JavaScript.
     const { evaluateRuntimeOutput } = await import("../../../scripts/verify-cursor-runtime.mjs");
-    expect(evaluateRuntimeOutput("CURSOR_ALWAYS_MARKER CURSOR_TYPESCRIPT_MARKER CURSOR_REQUESTED_MARKER")).toEqual({
-      deterministicMarkers: ["CURSOR_ALWAYS_MARKER", "CURSOR_TYPESCRIPT_MARKER"],
-      requestedMarkerObserved: true
+    expect(evaluateRuntimeOutput("CURSOR_ALWAYS_MARKER CURSOR_TYPESCRIPT_MARKER CURSOR_REQUESTED_MARKER").requestedRuleObservation).toEqual({
+      status: "observed",
+      marker: "CURSOR_REQUESTED_MARKER",
+      scope: "single-run",
+      effectOnEffectiveContext: "none"
     });
+  });
+
+  it("records an absent agent-requested rule as a single-run observation", async () => {
+    // @ts-expect-error The runtime probe is intentionally dependency-free JavaScript.
+    const { evaluateRuntimeOutput } = await import("../../../scripts/verify-cursor-runtime.mjs");
+    expect(evaluateRuntimeOutput("CURSOR_ALWAYS_MARKER CURSOR_TYPESCRIPT_MARKER").requestedRuleObservation.status).toBe("not-observed");
   });
 
   it("uses a Cursor CLI permissions shape with an explicit allow list", async () => {

@@ -12,7 +12,12 @@ export function evaluateRuntimeOutput(output) {
   if (observed.length !== deterministicMarkers.length) throw new Error(`Cursor did not expose every deterministic marker: ${observed.join(", ") || "none"}.`);
   return {
     deterministicMarkers: observed,
-    requestedMarkerObserved: output.includes("CURSOR_REQUESTED_MARKER")
+    requestedRuleObservation: {
+      status: output.includes("CURSOR_REQUESTED_MARKER") ? "observed" : "not-observed",
+      marker: "CURSOR_REQUESTED_MARKER",
+      scope: "single-run",
+      effectOnEffectiveContext: "none"
+    }
   };
 }
 
@@ -28,7 +33,9 @@ function run() {
   console.log(JSON.stringify({
     cursorVersion: version,
     ...evaluateRuntimeOutput(output),
+    fixtureTarget: "src/probe.ts",
     requestedRulesRemainNondeterministic: true,
+    promptSha256: crypto.createHash("sha256").update(runtimePrompt).digest("hex"),
     outputSha256: crypto.createHash("sha256").update(output).digest("hex")
   }, null, 2));
 }
