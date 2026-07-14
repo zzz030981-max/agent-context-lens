@@ -36,10 +36,10 @@ jobs:
           VERSION="${RELEASE_TAG#v}"
           for i in 1 2 3 4 5; do npm view "agent-context-lens@$VERSION" version && break || sleep 10; done
           npm view "agent-context-lens@$VERSION" bin engines repository license dist.integrity --json
-          npx -y --package="agent-context-lens@$VERSION" -- contextlens --version
-          npx -y --package="agent-context-lens@$VERSION" -- contextlens --help
-          npx -y --package="agent-context-lens@$VERSION" -- contextlens inspect . --file README.md --cwd . --agent all --json
-          npx -y --package="agent-context-lens@$VERSION" -- contextlens serve "$GITHUB_WORKSPACE" --file README.md --cwd . --port 4173 --no-open > server.log 2>&1 &
+          npm exec --yes --package="agent-context-lens@$VERSION" -- contextlens --version
+          npm exec --yes --package="agent-context-lens@$VERSION" -- contextlens --help
+          npm exec --yes --package="agent-context-lens@$VERSION" -- contextlens inspect . --file README.md --cwd . --agent all --json
+          npm exec --yes --package="agent-context-lens@$VERSION" -- contextlens serve "$GITHUB_WORKSPACE" --file README.md --cwd . --port 4173 --no-open > server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
           for i in 1 2 3 4 5; do curl --fail http://127.0.0.1:4173/api/files && break || sleep 2; done
