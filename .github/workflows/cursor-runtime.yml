@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  credential-check:
+  credential_check:
     runs-on: ubuntu-latest
     outputs:
       configured: ${{ steps.check.outputs.configured }}
@@ -22,8 +22,8 @@ jobs:
             echo "configured=false" >> "$GITHUB_OUTPUT"
           fi
   verify:
-    needs: credential-check
-    if: needs.credential-check.outputs.configured == 'true'
+    needs: credential_check
+    if: needs.credential_check.outputs.configured == 'true'
     runs-on: ubuntu-latest
     env:
       CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
@@ -39,8 +39,8 @@ jobs:
       - run: CURSOR_AGENT_BIN="$RUNNER_TEMP/cursor-agent/cursor-agent" npm run cursor:verify | tee cursor-runtime-evidence.json
       - run: cat cursor-runtime-evidence.json >> "$GITHUB_STEP_SUMMARY"
   skipped:
-    needs: credential-check
-    if: needs.credential-check.outputs.configured != 'true'
+    needs: credential_check
+    if: needs.credential_check.outputs.configured != 'true'
     runs-on: ubuntu-latest
     steps:
       - run: echo "Cursor runtime verification skipped: CURSOR_API_KEY is not configured." >> "$GITHUB_STEP_SUMMARY"

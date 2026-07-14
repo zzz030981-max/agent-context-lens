@@ -54,7 +54,7 @@ git commit -m "test: define Cursor credential skip contract"
 
 ```yaml
 jobs:
-  credential-check:
+  credential_check:
     runs-on: ubuntu-latest
     outputs:
       configured: ${{ steps.check.outputs.configured }}
@@ -64,8 +64,8 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: echo "configured=$([ -n \"$CURSOR_API_KEY\" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
   verify:
-    needs: credential-check
-    if: needs.credential-check.outputs.configured == 'true'
+    needs: credential_check
+    if: needs.credential_check.outputs.configured == 'true'
 ```
 
 Add a `skipped` job with the inverse condition and `echo "Cursor runtime verification skipped: CURSOR_API_KEY is not configured." >> "$GITHUB_STEP_SUMMARY"`.
