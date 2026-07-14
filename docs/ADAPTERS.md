@@ -1,6 +1,6 @@
 # Adapter evidence model
 
-Last reviewed: **2026-07-11**. A `documented` label requires a first-party source. A `verified` label requires a pinned client-version reproduction. Repository-local scans deliberately exclude user and organization policy that is not present in the selected repository.
+Last reviewed: **2026-07-14**. A `documented` label requires a first-party source. A `verified` label requires a pinned client-version reproduction. Repository-local scans deliberately exclude user and organization policy that is not present in the selected repository.
 
 Agent Context Lens distinguishes four evidence levels:
 
@@ -36,7 +36,9 @@ Managed organization policy and user-level `~/.claude/CLAUDE.md` are excluded.
 
 `npm run cursor:verify` uses a fixed fixture and a pinned Cursor CLI build to verify `alwaysApply` and matching-glob rule markers. The manual `Cursor runtime verification` workflow requires the `CURSOR_API_KEY` repository secret and records its version and evidence in the job summary.
 
-**Cursor semantic selection remains nondeterministic.** Agent-requested rules are recorded as observed or absent by the runtime probe, remain `inferred` or `manual` in reports, and are never promoted to deterministic context.
+The probe emits `requestedRuleObservation` for its agent-requested fixture rule. Its `status` is `observed` or `not-observed`; `marker`, `scope: "single-run"`, and `effectOnEffectiveContext: "none"` make its limit machine-readable. `fixtureTarget`, `promptSha256`, and `outputSha256` identify the exact probe without retaining model output.
+
+**Cursor semantic selection remains nondeterministic.** An observed or absent marker describes only one pinned CLI execution. Agent-requested rules remain `inferred` or `manual` in reports and are never promoted to deterministic context.
 
 ## GitHub Copilot
 
