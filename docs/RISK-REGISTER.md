@@ -1,6 +1,6 @@
 # Risk register and self-check
 
-Last reviewed: **2026-07-11**.
+Last reviewed: **2026-07-14**.
 
 ## Highest remaining uncertainty
 
@@ -14,6 +14,7 @@ Cursor can select some rules semantically rather than through a deterministic pa
 - Rules without deterministic triggers are shown as `manual` and excluded from effective context.
 - The runtime workflow records the pinned Cursor build and its deterministic marker evidence.
 - Agent-requested rules remain `inferred` or `manual` even after a successful probe.
+- `requestedRuleObservation` records only `observed` or `not-observed` for one pinned CLI execution, with prompt and output hashes; it never changes effective context.
 
 ## Important omissions discovered and resolved during development
 
