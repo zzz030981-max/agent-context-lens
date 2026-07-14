@@ -117,4 +117,3 @@ git push -u origin agent/cursor-runtime-observation
 - [ ] **Step 4: Open a PR and verify remote CI**
 
 Open a PR with the runtime evidence boundary and wait for all repository CI checks to pass. Keep the Cursor runtime workflow manual and secret-gated.
-
