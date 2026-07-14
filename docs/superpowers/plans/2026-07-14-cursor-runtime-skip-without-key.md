@@ -88,11 +88,11 @@ git commit -m "fix: skip Cursor runtime check without credentials"
 **Files:**
 - Modify: none
 
-- [ ] **Step 1: Parse the workflow YAML**
+- [ ] **Step 1: Let GitHub Actions parse the workflow on the draft pull request**
 
-Run: `node -e "import('yaml').then(async ({parse}) => parse(await (await import('node:fs/promises')).readFile('.github/workflows/cursor-runtime.yml', 'utf8')))"`
+Run: `gh pr checks <PR_NUMBER> --watch`
 
-Expected: exit 0.
+Expected: GitHub accepts the workflow and the repository CI completes successfully. The manual Cursor workflow is not dispatched during this check.
 
 - [ ] **Step 2: Run standard project verification**
 
