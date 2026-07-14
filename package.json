@@ -16,6 +16,7 @@
     "inspect:fixture": "npm run build && node apps/cli/dist/index.js inspect fixtures/conflicting-rules --file src/auth/login.ts --agent all --json",
     "clean": "find . -type d -name dist -prune -exec rm -rf {} +",
     "versions:check": "node scripts/check-versions.mjs",
+    "readme:check": "node scripts/check-readme-install.mjs",
     "package:inspect": "node scripts/inspect-package.mjs",
     "test:pack": "npm run build && node scripts/smoke-pack.mjs",
     "test:server-pack": "npm run build && node scripts/smoke-installed-server.mjs",

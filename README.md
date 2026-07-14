@@ -1,18 +1,45 @@
 <div align="center">
 
-<img src="assets/social-preview.png" alt="Agent Context Lens: effective context inspector" width="100%">
-
 # Agent Context Lens
 
-**See exactly which repository instructions an AI coding agent receives for any file.**
+**Why does Cursor follow pnpm while Copilot recommends npm?**
 
-Trace inheritance, path matching, conflicts, token cost, broken references, credential-like values, and risky commands across **Codex, Claude Code, Cursor, and GitHub Copilot**.
+See exactly which repository instructions each AI coding agent receives for a specific file—and where those instructions conflict.
 
 `100% local` · `No API key` · `Read-only` · `Deterministic by default`
+
+[![npm](https://img.shields.io/npm/v/agent-context-lens?logo=npm)](https://www.npmjs.com/package/agent-context-lens)
+[![CI](https://github.com/zzz030981-max/agent-context-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/zzz030981-max/agent-context-lens/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/node/v/agent-context-lens)](https://www.npmjs.com/package/agent-context-lens)
+[![License](https://img.shields.io/github/license/zzz030981-max/agent-context-lens)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/zzz030981-max/agent-context-lens)](https://github.com/zzz030981-max/agent-context-lens/releases)
 
 </div>
 
 ---
+
+## See it in 15 seconds
+
+```bash
+npx -y agent-context-lens@latest inspect . --file src/index.ts --cwd . --agent all
+```
+
+```text
+Agent Context Lens — src/auth/login.ts
+
+CURSOR   2 included
+  ✓ .cursor/rules/auth.mdc [path-match; inferred]
+  ✓ .cursor/rules/base.mdc [startup; inferred]
+  ⚠ Conflicting package manager instructions
+
+COPILOT  3 included
+  ✓ .github/copilot-instructions.md [startup; documented]
+  ✓ .github/instructions/typescript.instructions.md [path-match; documented]
+  ✓ src/AGENTS.md [path-match; documented]
+  ⚠ Conflicting package manager instructions
+```
+
+This output is generated from the repository's included `fixtures/conflicting-rules` demo. It traces inheritance, path matching, conflicts, token cost, broken references, credential-like values, and risky commands across **Codex, Claude Code, Cursor, and GitHub Copilot**.
 
 ## Why this exists
 
@@ -22,12 +49,21 @@ A modern repository may contain `AGENTS.md`, `CLAUDE.md`, `.claude/rules`, `.cur
 
 Agent Context Lens is the equivalent of a CSS cascade inspector for AI coding instructions.
 
-## Install and run
+## Install
 
 ```bash
-npx -y agent-context-lens@0.2.0 inspect . --file src/index.ts --cwd . --agent all
-npm install --global agent-context-lens@0.2.0
+npm install --global agent-context-lens
 ```
+
+## How it differs
+
+| Tool | Main job |
+|---|---|
+| Agent Context Lens | Explains which instructions actually apply to a specific file and agent. |
+| Agnix | Validates AI configuration files and best-practice issues. |
+| Rulesync | Generates or synchronizes rules across AI tools. |
+
+**Agnix validates the files. Rulesync generates the files. Agent Context Lens explains which files actually apply.**
 
 ## Development
 
